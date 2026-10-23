@@ -1,0 +1,975 @@
+fileFormatVersion: 2
+guid: 1e6f9f11e2df0c2409f60b7554ec7d2b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8747248243735936070
+    second: "\uC6B0\uC8FC\uC120-Photoroom_0"
+  - first:
+      213: -2322621932970158980
+    second: "\uC6B0\uC8FC\uC120-Photoroom_1"
+  - first:
+      213: 8070247178060970063
+    second: "\uC6B0\uC8FC\uC120-Photoroom_2"
+  - first:
+      213: -3842693025302581057
+    second: "\uC6B0\uC8FC\uC120-Photoroom_3"
+  - first:
+      213: -4926508022465232256
+    second: "\uC6B0\uC8FC\uC120-Photoroom_4"
+  - first:
+      213: 5712601669174139554
+    second: "\uC6B0\uC8FC\uC120-Photoroom_5"
+  - first:
+      213: -4297809173592030054
+    second: "\uC6B0\uC8FC\uC120-Photoroom_6"
+  - first:
+      213: 4847452546926461155
+    second: "\uC6B0\uC8FC\uC120-Photoroom_7"
+  - first:
+      213: -6430047010147509064
+    second: "\uC6B0\uC8FC\uC120-Photoroom_8"
+  - first:
+      213: 3903514862478509261
+    second: "\uC6B0\uC8FC\uC120-Photoroom_9"
+  - first:
+      213: 3349141041784719421
+    second: "\uC6B0\uC8FC\uC120-Photoroom_10"
+  - first:
+      213: -7468241787212464714
+    second: "\uC6B0\uC8FC\uC120-Photoroom_11"
+  - first:
+      213: -4734272071814277743
+    second: "\uC6B0\uC8FC\uC120-Photoroom_12"
+  - first:
+      213: 5957674777706681801
+    second: "\uC6B0\uC8FC\uC120-Photoroom_13"
+  - first:
+      213: 8510523254337894031
+    second: "\uC6B0\uC8FC\uC120-Photoroom_14"
+  - first:
+      213: 7641450231732188054
+    second: "\uC6B0\uC8FC\uC120-Photoroom_15"
+  - first:
+      213: -4374024265562045046
+    second: "\uC6B0\uC8FC\uC120-Photoroom_16"
+  - first:
+      213: -2841286692858298651
+    second: "\uC6B0\uC8FC\uC120-Photoroom_17"
+  - first:
+      213: -4539521337422556686
+    second: "\uC6B0\uC8FC\uC120-Photoroom_18"
+  - first:
+      213: -8501070645758549075
+    second: "\uC6B0\uC8FC\uC120-Photoroom_19"
+  - first:
+      213: 2486179297071510954
+    second: "\uC6B0\uC8FC\uC120-Photoroom_20"
+  - first:
+      213: -9178319980040171851
+    second: "\uC6B0\uC8FC\uC120-Photoroom_21"
+  - first:
+      213: -6975836841093972688
+    second: "\uC6B0\uC8FC\uC120-Photoroom_22"
+  - first:
+      213: 1503560392649840002
+    second: "\uC6B0\uC8FC\uC120-Photoroom_23"
+  - first:
+      213: 5132029811249302674
+    second: "\uC6B0\uC8FC\uC120-Photoroom_24"
+  - first:
+      213: -1363258374371270441
+    second: "\uC6B0\uC8FC\uC120-Photoroom_25"
+  - first:
+      213: 3716740130516455660
+    second: "\uC6B0\uC8FC\uC120-Photoroom_26"
+  - first:
+      213: -2271055723573583096
+    second: "\uC6B0\uC8FC\uC120-Photoroom_27"
+  - first:
+      213: 567436493557071439
+    second: "\uC6B0\uC8FC\uC120-Photoroom_28"
+  - first:
+      213: -4777201583022877368
+    second: "\uC6B0\uC8FC\uC120-Photoroom_29"
+  - first:
+      213: -5218580368316047236
+    second: "\uC6B0\uC8FC\uC120-Photoroom_30"
+  - first:
+      213: 8465485838892468525
+    second: "\uC6B0\uC8FC\uC120-Photoroom_31"
+  - first:
+      213: 2262653663715175806
+    second: "\uC6B0\uC8FC\uC120-Photoroom_32"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_0"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 893
+        width: 219
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab3c5f531188b9680800000000000000
+      internalID: -8747248243735936070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_1"
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 1069
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7458c168a364cfd0800000000000000
+      internalID: -2322621932970158980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_2"
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 862
+        width: 234
+        height: 222
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f483ce9ec074fff60800000000000000
+      internalID: 8070247178060970063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_3"
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 1060
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb0f7fd8d030caac0800000000000000
+      internalID: -3842693025302581057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_4"
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 1055
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08209d92e0781abb0800000000000000
+      internalID: -4926508022465232256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_5"
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 865
+        width: 102
+        height: 183
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2aa9d6293fc374f40800000000000000
+      internalID: 5712601669174139554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_6"
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 868
+        width: 137
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a94c1afc35d1b54c0800000000000000
+      internalID: -4297809173592030054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_7"
+      rect:
+        serializedVersion: 2
+        x: 615
+        y: 1043
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e04d15986c954340800000000000000
+      internalID: 4847452546926461155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_8"
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 910
+        width: 176
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bc5817ef42e3c6a0800000000000000
+      internalID: -6430047010147509064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_9"
+      rect:
+        serializedVersion: 2
+        x: 846
+        y: 865
+        width: 104
+        height: 177
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc44d71f5121c2630800000000000000
+      internalID: 3903514862478509261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_10"
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 875
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d388242780a8a7e20800000000000000
+      internalID: 3349141041784719421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_11"
+      rect:
+        serializedVersion: 2
+        x: 397
+        y: 854
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6bdf878b9a97b5890800000000000000
+      internalID: -7468241787212464714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_12"
+      rect:
+        serializedVersion: 2
+        x: 1143
+        y: 853
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 195157942ac7c4eb0800000000000000
+      internalID: -4734272071814277743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_13"
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 639
+        width: 138
+        height: 205
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c5d28c25a9eda250800000000000000
+      internalID: 5957674777706681801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_14"
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 638
+        width: 128
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f86f2832fc37b1670800000000000000
+      internalID: 8510523254337894031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_15"
+      rect:
+        serializedVersion: 2
+        x: 399
+        y: 599
+        width: 188
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6933937ef72eb0a60800000000000000
+      internalID: 7641450231732188054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_16"
+      rect:
+        serializedVersion: 2
+        x: 656
+        y: 628
+        width: 138
+        height: 205
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a854c34ea185c43c0800000000000000
+      internalID: -4374024265562045046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_17"
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 657
+        width: 132
+        height: 140
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5eef22f7ec8b198d0800000000000000
+      internalID: -2841286692858298651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_18"
+      rect:
+        serializedVersion: 2
+        x: 971
+        y: 594
+        width: 249
+        height: 253
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f15f9025616001c0800000000000000
+      internalID: -4539521337422556686
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_19"
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 378
+        width: 145
+        height: 263
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da3af0dc941260a80800000000000000
+      internalID: -8501070645758549075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_20"
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 382
+        width: 188
+        height: 236
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa5b0e9f5eea08220800000000000000
+      internalID: 2486179297071510954
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_21"
+      rect:
+        serializedVersion: 2
+        x: 439
+        y: 255
+        width: 235
+        height: 342
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bec5d26b9e00a080800000000000000
+      internalID: -9178319980040171851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_22"
+      rect:
+        serializedVersion: 2
+        x: 712
+        y: 415
+        width: 173
+        height: 109
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03db2834a59d03f90800000000000000
+      internalID: -6975836841093972688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_23"
+      rect:
+        serializedVersion: 2
+        x: 904
+        y: 408
+        width: 120
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2859d3ef538bdd410800000000000000
+      internalID: 1503560392649840002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_24"
+      rect:
+        serializedVersion: 2
+        x: 1073
+        y: 321
+        width: 145
+        height: 262
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29cca343ce1a83740800000000000000
+      internalID: 5132029811249302674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_25"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 415
+        height: 253
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d0268a3bbbb41de0800000000000000
+      internalID: -1363258374371270441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_26"
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 252
+        width: 120
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce05fd1e473849330800000000000000
+      internalID: 3716740130516455660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_27"
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 251
+        width: 172
+        height: 110
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 803674b1ad69b70e0800000000000000
+      internalID: -2271055723573583096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_28"
+      rect:
+        serializedVersion: 2
+        x: 673
+        y: 177
+        width: 402
+        height: 229
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4eff070c70ffd700800000000000000
+      internalID: 567436493557071439
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_29"
+      rect:
+        serializedVersion: 2
+        x: 1015
+        y: 41
+        width: 187
+        height: 235
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 845dc7f8878f3bdb0800000000000000
+      internalID: -4777201583022877368
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_30"
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 18
+        width: 346
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c70e1b2edc0e397b0800000000000000
+      internalID: -5218580368316047236
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_31"
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 19
+        width: 346
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d290946b4827b7570800000000000000
+      internalID: 8465485838892468525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC6B0\uC8FC\uC120-Photoroom_32"
+      rect:
+        serializedVersion: 2
+        x: 1207
+        y: 0
+        width: 23
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e7daa73e48f866f10800000000000000
+      internalID: 2262653663715175806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uC6B0\uC8FC\uC120-Photoroom_0": -8747248243735936070
+      "\uC6B0\uC8FC\uC120-Photoroom_1": -2322621932970158980
+      "\uC6B0\uC8FC\uC120-Photoroom_10": 3349141041784719421
+      "\uC6B0\uC8FC\uC120-Photoroom_11": -7468241787212464714
+      "\uC6B0\uC8FC\uC120-Photoroom_12": -4734272071814277743
+      "\uC6B0\uC8FC\uC120-Photoroom_13": 5957674777706681801
+      "\uC6B0\uC8FC\uC120-Photoroom_14": 8510523254337894031
+      "\uC6B0\uC8FC\uC120-Photoroom_15": 7641450231732188054
+      "\uC6B0\uC8FC\uC120-Photoroom_16": -4374024265562045046
+      "\uC6B0\uC8FC\uC120-Photoroom_17": -2841286692858298651
+      "\uC6B0\uC8FC\uC120-Photoroom_18": -4539521337422556686
+      "\uC6B0\uC8FC\uC120-Photoroom_19": -8501070645758549075
+      "\uC6B0\uC8FC\uC120-Photoroom_2": 8070247178060970063
+      "\uC6B0\uC8FC\uC120-Photoroom_20": 2486179297071510954
+      "\uC6B0\uC8FC\uC120-Photoroom_21": -9178319980040171851
+      "\uC6B0\uC8FC\uC120-Photoroom_22": -6975836841093972688
+      "\uC6B0\uC8FC\uC120-Photoroom_23": 1503560392649840002
+      "\uC6B0\uC8FC\uC120-Photoroom_24": 5132029811249302674
+      "\uC6B0\uC8FC\uC120-Photoroom_25": -1363258374371270441
+      "\uC6B0\uC8FC\uC120-Photoroom_26": 3716740130516455660
+      "\uC6B0\uC8FC\uC120-Photoroom_27": -2271055723573583096
+      "\uC6B0\uC8FC\uC120-Photoroom_28": 567436493557071439
+      "\uC6B0\uC8FC\uC120-Photoroom_29": -4777201583022877368
+      "\uC6B0\uC8FC\uC120-Photoroom_3": -3842693025302581057
+      "\uC6B0\uC8FC\uC120-Photoroom_30": -5218580368316047236
+      "\uC6B0\uC8FC\uC120-Photoroom_31": 8465485838892468525
+      "\uC6B0\uC8FC\uC120-Photoroom_32": 2262653663715175806
+      "\uC6B0\uC8FC\uC120-Photoroom_4": -4926508022465232256
+      "\uC6B0\uC8FC\uC120-Photoroom_5": 5712601669174139554
+      "\uC6B0\uC8FC\uC120-Photoroom_6": -4297809173592030054
+      "\uC6B0\uC8FC\uC120-Photoroom_7": 4847452546926461155
+      "\uC6B0\uC8FC\uC120-Photoroom_8": -6430047010147509064
+      "\uC6B0\uC8FC\uC120-Photoroom_9": 3903514862478509261
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
