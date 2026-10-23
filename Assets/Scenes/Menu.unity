@@ -693,6 +693,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Jain::Menu
   basicMenu: {fileID: 619971660}
   settingMenu: {fileID: 2047020602}
+  menu3: {fileID: 727485459}
+  menu4: {fileID: 331596819}
+  menu5: {fileID: 92915252}
+  menu6: {fileID: 360570853}
+  fadeDuration: 0.5
 --- !u!1 &297765927
 GameObject:
   m_ObjectHideFlags: 0
@@ -1105,6 +1110,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 619971661}
+  - component: {fileID: 619971662}
   m_Layer: 5
   m_Name: BasicMenu
   m_TagString: Untagged
@@ -1133,6 +1139,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &619971662
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 619971660}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &727485459
 GameObject:
   m_ObjectHideFlags: 0
@@ -1916,6 +1934,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2047020603}
+  - component: {fileID: 2047020604}
   m_Layer: 5
   m_Name: SettingMenu
   m_TagString: Untagged
@@ -1944,6 +1963,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!225 &2047020604
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2047020602}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
