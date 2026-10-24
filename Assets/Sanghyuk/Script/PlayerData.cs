@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace sanghyuk
+namespace Sanghyuk
 {
     public class PlayerData : MonoBehaviour
     {
@@ -17,10 +17,7 @@ namespace sanghyuk
 
         void Update()
         {
-            if (PlayerHp <= 0)
-            {
-                SceneManager.LoadScene("Die"); // 체력 없으면 사망씬으로 감
-            }
+
         }
     }
 

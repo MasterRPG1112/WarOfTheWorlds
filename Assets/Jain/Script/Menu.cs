@@ -7,9 +7,11 @@ namespace Jain
 {
     public class Menu : MonoBehaviour
     {
-        [Header("메뉴 오브젝트 (딱 2개만 사용)")]
+        [Header("메뉴 오브젝트")]
         public GameObject basicMenu;
         public GameObject settingMenu;
+        public GameObject listMenu;
+        public GameObject startInvokeMenu;
 
         [Header("페이드 설정")]
         public float fadeDuration = 0.5f; // 페이드 전환 시간 (초)
@@ -17,21 +19,28 @@ namespace Jain
         // 내부에서 자동으로 가져올 CanvasGroup 변수
         private CanvasGroup basicGroup;
         private CanvasGroup settingGroup;
+        private CanvasGroup listGroup;
+        private CanvasGroup startInvokeGroup;
 
         void Start()
         {
             // 각 GameObject에 붙어있는 CanvasGroup을 자동으로 가져옴
             basicGroup = basicMenu != null ? basicMenu.GetComponent<CanvasGroup>() : null;
             settingGroup = settingMenu != null ? settingMenu.GetComponent<CanvasGroup>() : null;
+            listGroup = listMenu != null ? listMenu.GetComponent<CanvasGroup>() : null;
+            startInvokeGroup = startInvokeMenu != null ? startInvokeMenu.GetComponent<CanvasGroup>() : null;
 
             // 게임 시작 시 기본 메뉴는 켜고, 설정 메뉴는 끄기 초기화
             SetMenuState(basicMenu, basicGroup, true, 1f);
             SetMenuState(settingMenu, settingGroup, false, 0f);
+            SetMenuState(listMenu, listGroup, false, 0f);
+            SetMenuState(startInvokeMenu, startInvokeGroup, false, 0f);
         }
 
         public void StartBtn()
         {
-            SceneManager.LoadScene("Stage1");
+            StopAllCoroutines();
+            StartCoroutine(SwitchMenuRoutine(basicGroup, startInvokeGroup, basicMenu, startInvokeMenu));
         }
 
         // 설정 버튼 클릭 시: 기본 메뉴 -> 설정 메뉴로 페이드 전환
@@ -42,15 +51,43 @@ namespace Jain
         }
 
         // 뒤로 가기 버튼 클릭 시: 설정 메뉴 -> 기본 메뉴로 페이드 전환
-        public void BackBtn()
+        public void BackBtn1()
         {
             StopAllCoroutines();
             StartCoroutine(SwitchMenuRoutine(settingGroup, basicGroup, settingMenu, basicMenu));
         }
 
+        public void BackBtn2()
+        {
+            StopAllCoroutines();
+            StartCoroutine(SwitchMenuRoutine(listGroup, basicGroup, listMenu, basicMenu));
+        }
+
+        public void BackBtn3()
+        {
+            StopAllCoroutines();
+            StartCoroutine(SwitchMenuRoutine(startInvokeGroup, basicGroup, startInvokeMenu, basicMenu));
+        }
+
         public void ExitBtn()
         {
             Application.Quit();
+        }
+
+        public void ListBtn()
+        {
+            StopAllCoroutines();
+            StartCoroutine(SwitchMenuRoutine(basicGroup,listGroup, basicMenu, listMenu));
+        }
+
+        public void ReStartBtn()
+        {
+            SceneManager.LoadScene("Stage1");
+        }
+
+        public void ContinueBtn()
+        {
+
         }
 
         // 부드럽게 페이드 되면서 두 메뉴를 상호 교체하는 코루틴

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-namespace sanghyuk
+
+namespace Sanghyuk
 {
     public class Player : MonoBehaviour
     {
@@ -41,15 +42,6 @@ namespace sanghyuk
             }
         }
 
-        private void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (collision.CompareTag("Bullet"))
-            {
-                Data = GameObject.Find("PlayerDataManager").GetComponent<PlayerData>();
-                Destroy(collision.gameObject);
-                Data.PlayerHp -= 1;
-            }
-        }
         void Update()
         {
             moveX = Input.GetAxis("Horizontal");

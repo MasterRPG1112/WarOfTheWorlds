@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 3
   tags:
   - Bullet
+  - Point1
+  - Point2
+  - Point3
   layers:
   - Default
   - TransparentFX
