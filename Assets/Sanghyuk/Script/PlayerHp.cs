@@ -10,7 +10,7 @@ namespace Jain
 
         void Start()
         {
-            ReloadUI();
+            ReloadUI(); 
         }
 
         void Update()
