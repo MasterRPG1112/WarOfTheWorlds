@@ -11,9 +11,9 @@ namespace Jain
 
         void Start()
         {
-<<<<<<< Updated upstream:Assets/Sanghyuk/Script/PlayerHp.cs
+// Updated upstream:Assets/Sanghyuk/Script/PlayerHp.cs
             ReloadUI(); 
-=======
+
             GameDataManager.instance.LoadData();
             if (gameObject.CompareTag("Point1"))
             {
@@ -31,7 +31,7 @@ namespace Jain
                 else playerHp = GameDataManager.instance.playerhp3;
             }
             ReloadUI();
->>>>>>> Stashed changes:Assets/Script/PlayerHp.cs
+// Stashed changes:Assets/Script/PlayerHp.cs
         }
 
         void Update()
