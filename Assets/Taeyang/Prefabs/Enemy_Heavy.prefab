@@ -28,14 +28,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3192091864717876303}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 1, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3379326592672603065}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 180}
 --- !u!212 &441565502108265427
 SpriteRenderer:
   serializedVersion: 3
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 2c21797a12626d843b768d0ad131e507, type: 3}
+  m_Sprite: {fileID: 3716740130516455660, guid: 1e6f9f11e2df0c2409f60b7554ec7d2b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -181,6 +181,8 @@ MonoBehaviour:
   straightProjectile: {fileID: 6636373115988631406, guid: 1f9ed065d72d8b94cbb8e6775c0583e2, type: 3}
   bombProjectile: {fileID: 436035375908166811, guid: 80a42f11b7d68e74fb217452dec6264a, type: 3}
   firePoint: {fileID: 3379326592672603065}
+  stageOnePatterns: 0
+  stageDifficulty: 1
 --- !u!1 &5797081655991421858
 GameObject:
   m_ObjectHideFlags: 0
