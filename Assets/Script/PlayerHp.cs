@@ -11,27 +11,29 @@ namespace Jain
 
         void Start()
         {
-// Updated upstream:Assets/Sanghyuk/Script/PlayerHp.cs
             ReloadUI(); 
-
             GameDataManager.instance.LoadData();
             if (gameObject.CompareTag("Point1"))
             {
                 if (GameDataManager.instance.dataReset == 1) playerHp = 8;
                 else playerHp = GameDataManager.instance.playerhp1;
+                GameDataManager.instance.playerhp1 = playerHp;
+                GameDataManager.instance.SaveData();
             }
             if (gameObject.CompareTag("Point2"))
             {
                 if (GameDataManager.instance.dataReset == 1) playerHp = 5;
                 else playerHp = GameDataManager.instance.playerhp2;
+                GameDataManager.instance.playerhp2 = playerHp;
+                GameDataManager.instance.SaveData();
             }
             if (gameObject.CompareTag("Point3"))
             {
                 if (GameDataManager.instance.dataReset == 1) playerHp = 5;
                 else playerHp = GameDataManager.instance.playerhp3;
+                GameDataManager.instance.playerhp3 = playerHp;
+                GameDataManager.instance.SaveData();
             }
-            ReloadUI();
-// Stashed changes:Assets/Script/PlayerHp.cs
         }
 
         void Update()
@@ -53,7 +55,13 @@ namespace Jain
                     if (playerHp <= 0)
                     {
                         GameDataManager.instance.dataReset = 0;
-                        SceneManager.LoadScene("Menu");
+                        GameDataManager.instance.playerhp1 = 8;
+                        GameDataManager.instance.playerhp2 = 5;
+                        GameDataManager.instance.playerhp3 = 5;
+                        GameDataManager.instance.SaveData();
+                        if (SceneManager.GetActiveScene().name == "Stage1") SceneManager.LoadScene("Stage1");
+                        else if (SceneManager.GetActiveScene().name == "Stage2") SceneManager.LoadScene("Stage2");
+                        else SceneManager.LoadScene("Stage3");
                     }
                 }
                 if (gameObject.CompareTag("Point2"))

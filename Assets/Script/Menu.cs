@@ -89,6 +89,8 @@ namespace Jain
 
         public void ContinueBtn()
         {
+            GameDataManager.instance.dataReset = 0;
+            GameDataManager.instance.SaveData();
             SceneManager.LoadScene("Stage1");
         }
 

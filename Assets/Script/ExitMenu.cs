@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Jain
 {
@@ -24,7 +25,8 @@ namespace Jain
 
         public void EndBtn()
         {
-            Application.Quit();
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("Menu");
         }
 
         void OpenUI()

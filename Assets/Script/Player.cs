@@ -1,5 +1,7 @@
+using Jain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace Sanghyuk
 {
@@ -31,6 +33,7 @@ namespace Sanghyuk
 
         void Bomb()
         {
+            //쿨타임 추가 필요
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 GameObject[] bullets = GameObject.FindGameObjectsWithTag("Bullet");

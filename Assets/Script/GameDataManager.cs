@@ -13,6 +13,7 @@ namespace Jain
 
         //점수 관련
         public int score;
+        public int money;
 
         //데이터 리셋
         public int dataReset = 0;
@@ -21,6 +22,7 @@ namespace Jain
         {
             instance = this;
             DontDestroyOnLoad(instance);
+            LoadData();
         }
 
         void Update()
@@ -48,6 +50,7 @@ namespace Jain
 
             //점수 관련
             PlayerPrefs.SetInt("Score", score);
+            PlayerPrefs.SetInt("Money", money);
 
             //데이터 리셋
             PlayerPrefs.SetInt("DataReset", dataReset);
@@ -62,6 +65,7 @@ namespace Jain
 
             //점수 관련
             score = PlayerPrefs.GetInt("Score");
+            money = PlayerPrefs.GetInt("Money");
 
             //데이터 리셋
             dataReset = PlayerPrefs.GetInt("DataReset");

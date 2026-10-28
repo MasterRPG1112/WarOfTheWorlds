@@ -905,6 +905,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 297465899387756342, guid: 7e1e1d69e4640a740aaee7eec7813cf0, type: 3}
+      propertyPath: Data
+      value: 
+      objectReference: {fileID: 156024729}
     - target: {fileID: 4095554852020917779, guid: 7e1e1d69e4640a740aaee7eec7813cf0, type: 3}
       propertyPath: m_Name
       value: Meteorite
