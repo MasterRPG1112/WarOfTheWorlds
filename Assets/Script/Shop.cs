@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.UI;
 
 namespace Jain
 {
@@ -22,15 +24,37 @@ namespace Jain
         public int pull; //∫Ì∑¢»¶
         public int slow; //∞®º”¿Â
 
+        //UI
+        public Text coinUI;
+        public GameObject shopMenu;
+
         void Start()
         {
-
+            GameDataManager.instance.LoadData();
+            if (GameDataManager.instance.dataReset == 1) coin = 0;
+            else coin = GameDataManager.instance.money;
+            ReloadUI();
         }
 
         void Update()
         {
+            Cheat();
+        }
 
+        void Cheat()
+        {
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                coin += 100;
+                ReloadUI();
+                GameDataManager.instance.money = coin;
+                GameDataManager.instance.SaveData();
+            }
+        }
+
+        void ReloadUI()
+        {
+            coinUI.text = "≥≤¿∫ µ∑ : " + coin + "ºø";
         }
     }
-
 }

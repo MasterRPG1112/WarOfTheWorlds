@@ -58,6 +58,7 @@ namespace Jain
                         GameDataManager.instance.playerhp1 = 8;
                         GameDataManager.instance.playerhp2 = 5;
                         GameDataManager.instance.playerhp3 = 5;
+                        GameDataManager.instance.score = 0;
                         GameDataManager.instance.SaveData();
                         if (SceneManager.GetActiveScene().name == "Stage1") SceneManager.LoadScene("Stage1");
                         else if (SceneManager.GetActiveScene().name == "Stage2") SceneManager.LoadScene("Stage2");
