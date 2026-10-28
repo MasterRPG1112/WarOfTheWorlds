@@ -18,6 +18,28 @@ namespace Taeyang
         private float speedScale = 1f;
         private float remaining;
         private bool resolved;
+        private bool curved;
+        private Vector2 curveStart, curveControl, curveEnd;
+        private float curveAge, curveDuration;
+
+        public static Vector2 Bezier(Vector2 start, Vector2 control, Vector2 end, float t)
+        {
+            t = Mathf.Clamp01(t);
+            return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end;
+        }
+
+        // Snapshot the target once: the curve never tracks the player's later motion.
+        public void InitializeCurve(EnemyShip source, Vector2 end, float bend, float duration)
+        {
+            Initialize(source, end - (Vector2)transform.position, null);
+            curved = true;
+            curveStart = transform.position;
+            curveEnd = end;
+            Vector2 delta = end - curveStart;
+            curveControl = (curveStart + end) * 0.5f + new Vector2(-delta.y, delta.x).normalized * bend;
+            curveDuration = Mathf.Max(0.1f, duration);
+            remaining = Mathf.Max(lifetime, curveDuration + 0.1f);
+        }
 
         private void Awake()
         {
@@ -44,6 +66,17 @@ namespace Taeyang
 
         private void FixedUpdate()
         {
+            if (curved)
+            {
+                curveAge += Time.fixedDeltaTime;
+                float t = Mathf.Clamp01(curveAge / curveDuration);
+                Vector2 next = Bezier(curveStart, curveControl, curveEnd, t);
+                direction = (next - body.position).normalized;
+                body.MovePosition(next);
+                RotateToDirection();
+                if (t >= 1f) Destroy(gameObject);
+                return;
+            }
             if (target != null)
             {
                 Vector2 desired = ((Vector2)target.position - body.position).normalized;

@@ -19,6 +19,9 @@ namespace Taeyang
         public EnemyProjectile straightProjectile;
         public EnemyProjectile bombProjectile;
         public Transform firePoint;
+        // Opt-in on Stage 1 variants only; original EnemyTest prefabs retain their behavior.
+        public bool stageOnePatterns;
+        [Range(1,3)] public int stageDifficulty = 1;
 
         public static event Action<EnemyShip, int> DestroyedByPlayer;
         public int CurrentHealth { get; private set; }
@@ -93,6 +96,37 @@ namespace Taeyang
             Vector2 origin = firePoint != null ? firePoint.position : transform.position + Vector3.down * 0.35f;
             Vector2 aim = ((Vector2)player.position - origin).normalized;
             if (aim.sqrMagnitude < 0.01f) aim = Vector2.down;
+            if (stageOnePatterns)
+            {
+                if (kind == EnemyKind.Scout)
+                { Shoot(homingProjectile, origin, aim, true); }
+                else if (kind == EnemyKind.Bomber)
+                {
+                    if (bombProjectile != null)
+                    {
+                        Vector2 snapshot = player.position;
+                        foreach (float bend in new[] { -2.4f, 2.4f })
+                            Instantiate(bombProjectile, origin, Quaternion.identity)
+                                .InitializeCurve(this, snapshot, bend, 1.6f);
+                    }
+                }
+                else if (kind == EnemyKind.Interceptor)
+                {
+                    Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+                    float speed = straightProjectile != null ? straightProjectile.speed : 7f;
+                    Vector2 predicted = StageOneMath.Predict(origin, player.position,
+                        rb != null ? rb.linearVelocity : Vector2.zero, speed, 1.2f);
+                    Shoot(straightProjectile, origin, predicted - origin, false);
+                }
+                else
+                {
+                    if(stageDifficulty >= 2 && kind == EnemyKind.Heavy) Shoot(homingProjectile, origin, aim, true);
+                    int spread = kind == EnemyKind.Heavy ? 2 : kind == EnemyKind.Fighter ? 1 : 0;
+                    for (int i = -spread; i <= spread; i++)
+                        Shoot(straightProjectile, origin, Rotate(aim, i * 16f), false);
+                }
+                return;
+            }
 
             switch (kind)
             {

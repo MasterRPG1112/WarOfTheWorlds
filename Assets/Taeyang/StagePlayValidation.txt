@@ -1,0 +1,4 @@
+PASS Stage 1: 300 seconds, 5 waves, spawn ticks 99, max projectiles 20, max obstacles 2, boss callback/clear, moving curve and homing observed, runtime errors 0, Editor Search exceptions 1.
+PASS Stage 2: 300 seconds, 5 waves, spawn ticks 74, max projectiles 54, max obstacles 2, boss callback/clear, moving curve and homing observed, runtime errors 0, Editor Search exceptions 1.
+PASS Stage 3: 300 seconds, 5 waves, spawn ticks 59, max projectiles 67, max obstacles 2, boss callback/clear, moving curve and homing observed, runtime errors 0, Editor Search exceptions 1.
+PASS: all stages; accelerated simulation; synthetic boss lifecycle tested. Human gameplay/balance review not performed.
