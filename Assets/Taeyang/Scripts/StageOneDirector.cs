@@ -24,7 +24,7 @@ namespace Taeyang
                 Wave = w + 1;
                 foreach (int kind in Waves[w])
                 {
-                    EnemyShip ship = Instantiate(prefabs[kind], new Vector3(Random.Range(-6f,6f),5.8f,0), Quaternion.identity);
+                    EnemyShip ship = Instantiate(prefabs[kind], new Vector3(Random.Range(-6f,6f),5.8f,0), prefabs[kind].transform.rotation);
                     ship.stageOnePatterns = true;
                     alive.Add(ship);
                     yield return new WaitForSeconds(1.1f / timeScaleForTest);
