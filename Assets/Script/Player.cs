@@ -1,4 +1,5 @@
 using Jain;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms.Impl;
@@ -8,6 +9,8 @@ namespace Sanghyuk
     public class Player : MonoBehaviour
     {
         int bomb = 1;
+        public GameObject Origin;
+        public GameObject Cam;
         public GameObject BHole;
         public GameObject GravityUnit;
         public GameObject ParryingUnit;
@@ -41,13 +44,8 @@ namespace Sanghyuk
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
+                    Instantiate(Origin, Cam.transform.position + new Vector3(0f, -10f, +1f), Cam.transform.rotation);
                     this.bomb -= 1;
-                    GameObject[] bullets = GameObject.FindGameObjectsWithTag("Bullet");
-
-                    foreach (GameObject bullet in bullets)
-                    {
-                        Destroy(bullet);
-                    }
                 }
             }
         }

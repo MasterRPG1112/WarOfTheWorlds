@@ -574,6 +574,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a134029795204c41add797fbe19377b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Sanghyuk.Player
+  Origin: {fileID: 3311043459843756215, guid: f96fac1b61f63da4cb8cf649b267d404, type: 3}
+  Cam: {fileID: 1798690594}
   BHole: {fileID: 7014707500925301204, guid: 06cc1245a57e02744980b87522218a05, type: 3}
   GravityUnit: {fileID: 5617360926576814664, guid: 18f78fd1cbfaf1e4a9dee56a8af7f254, type: 3}
   ParryingUnit: {fileID: 1659071952594042099, guid: 380e74145fa2eea4fbf0969a1285a9c7, type: 3}

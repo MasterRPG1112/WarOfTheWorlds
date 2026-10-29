@@ -18,7 +18,7 @@ namespace Sanghyuk
         {
             if (other.gameObject.CompareTag("Bullet"))
             {
-                //other 써서 속도를 느리게 하는 코드 가져오기
+                //총알 속도 데이터 가져와서 속도 줄이는거 여기 만들기
             }
         }
     }
