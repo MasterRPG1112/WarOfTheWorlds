@@ -7,6 +7,10 @@ namespace Sanghyuk
 {
     public class Player : MonoBehaviour
     {
+        int bomb = 1;
+        public GameObject BHole;
+        public GameObject GravityUnit;
+        public GameObject ParryingUnit;
         public PlayerData Data;
         Rigidbody2D thisRigi;
         public float speed = 5;
@@ -33,24 +37,50 @@ namespace Sanghyuk
 
         void Bomb()
         {
-            //쿨타임 추가 필요
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (bomb  == 1)
             {
-                GameObject[] bullets = GameObject.FindGameObjectsWithTag("Bullet");
-
-                foreach (GameObject bullet in bullets)
+                if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    Destroy(bullet);
+                    this.bomb -= 1;
+                    GameObject[] bullets = GameObject.FindGameObjectsWithTag("Bullet");
+
+                    foreach (GameObject bullet in bullets)
+                    {
+                        Destroy(bullet);
+                    }
                 }
             }
         }
-
+        void BlackH()
+        {
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                GameObject BH = Instantiate(BHole, transform.position, transform.rotation);
+            }
+        }
+        void Grav()
+        {
+            if (Input.GetKeyDown(KeyCode.V))
+            {
+                GameObject GV = Instantiate(GravityUnit, transform.position, transform.rotation);
+            }
+        }
+        void Par()
+        {
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+            {
+                GameObject PR = Instantiate(ParryingUnit, transform.position, transform.rotation);
+            }
+        }
         void Update()
         {
             moveX = Input.GetAxis("Horizontal");
             moveY = Input.GetAxis("Vertical");
             Move();
             Bomb();
+            BlackH();
+            Grav();
+            Par();
         }
     }
 }
