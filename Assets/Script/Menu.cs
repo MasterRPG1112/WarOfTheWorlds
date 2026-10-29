@@ -22,6 +22,9 @@ namespace Jain
         private CanvasGroup listGroup;
         private CanvasGroup startInvokeGroup;
 
+        //랭크 변수
+        public Text[] rankTexts;
+
         void Start()
         {
             // 각 GameObject에 붙어있는 CanvasGroup을 자동으로 가져옴
@@ -76,6 +79,7 @@ namespace Jain
 
         public void ListBtn()
         {
+            OpenRank();
             StopAllCoroutines();
             StartCoroutine(SwitchMenuRoutine(basicGroup,listGroup, basicMenu, listMenu));
         }
@@ -92,6 +96,37 @@ namespace Jain
             GameDataManager.instance.dataReset = 0;
             GameDataManager.instance.SaveData();
             SceneManager.LoadScene("Stage1");
+        }
+
+        void OpenRank()
+        {
+            var rankList = GameDataManager.instance.rank;
+
+            // 1. 우선 모든 텍스트 칸을 초기화 (데이터가 부족할 때 빈칸으로 비우기 위함)
+            for (int i = 0; i < rankTexts.Length; i++)
+            {
+                if (rankTexts[i] != null)
+                {
+                    rankTexts[i].text = (i + 1) + ". -";
+                }
+            }
+
+            // 2. 데이터가 없다면 종료
+            if (rankList == null || rankList.Count == 0) return;
+
+            // 3. 실제 데이터가 있는 만큼 (최대 10개) 텍스트에 대입
+            int count = Mathf.Min(rankList.Count, rankTexts.Length);
+
+            for (int i = 0; i < count; i++)
+            {
+                if (rankTexts[i] != null)
+                {
+                    var rankData = rankList[i];
+
+                    // 형식: [순위]. [이름] - [점수]점
+                    rankTexts[i].text = (i + 1) + ". " + rankData.playerName + " - " + rankData.stageScore + "점";
+                }
+            }
         }
 
         // 부드럽게 페이드 되면서 두 메뉴를 상호 교체하는 코루틴
