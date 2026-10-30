@@ -19,6 +19,8 @@ public class Invincibility : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        var combat = collision.GetComponentInParent<Integration.IntegratedCombat>();
+        if (combat != null) { combat.data.InvinTimerStart(); Destroy(gameObject); return; }
         if (collision.CompareTag("Player"))
         {
             Data.InvinTimerStart();

@@ -21,6 +21,8 @@ namespace Taeyang
         public int SpawnTicks { get; private set; }
         public const float Duration = 300;
         public bool noBossCampaign;
+        // Prototype-only skip; a registered boss always uses its real defeat pipeline.
+        public bool allowMissingBossTestSkip;
         public bool perimeterSpawns;
         public int LastSpawnDirection { get; private set; } = -1;
         public Vector2 LastSpawnPosition { get; private set; }
@@ -67,6 +69,8 @@ namespace Taeyang
                 State = Phase.AwaitingBoss;
                 bossRequested.Invoke();
                 if(CurrentBoss != null && State == Phase.AwaitingBoss) AttachBoss(Instantiate(CurrentBoss,bossPosition,Quaternion.identity));
+                else if (CurrentBoss == null && allowMissingBossTestSkip && State == Phase.AwaitingBoss)
+                    SkipMissingBossForTesting();
             }
             if(State == Phase.Boss && bossWasAttached && boss == null) NotifyBossDefeated();
         }
@@ -107,6 +111,8 @@ namespace Taeyang
         {
             if(State != Phase.AwaitingBoss || instance == null) return;
             boss = instance; bossWasAttached = true; State = Phase.Boss;
+            var target = instance.GetComponent<Integration.IntegratedBossTarget>();
+            if (target != null) target.director = this;
         }
         // Call on actual defeat if the team's boss pools/disables itself rather than being destroyed.
         public void NotifyBossDefeated()

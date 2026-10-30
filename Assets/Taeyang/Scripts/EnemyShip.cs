@@ -40,6 +40,8 @@ namespace Taeyang
         private float flashTimer;
         private Color baseColor;
         private bool enteredArena;
+        private Vector2 knockback;
+        private float nextPlayerContact;
 
         private void Awake()
         {
@@ -82,7 +84,8 @@ namespace Taeyang
 
         private void FixedUpdate()
         {
-            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen)
+            { body.linearVelocity = Vector2.zero; return; }
             if (approachPlayer)
             {
                 if (player == null) FindPlayer();
@@ -96,7 +99,7 @@ namespace Taeyang
                 Vector2 destination = remaining > 0
                     ? body.position + towardPlayer.normalized * Mathf.Min(remaining, moveSpeed * Time.fixedDeltaTime)
                     : body.position;
-                body.MovePosition(destination);
+                body.MovePosition(ApplyKnockback(destination));
                 return;
             }
             float y = body.position.y;
@@ -107,7 +110,44 @@ namespace Taeyang
                 x += Mathf.Sin(age * 3.5f) * 0.45f;
             if (kind == EnemyKind.Bomber && player != null)
                 x = Mathf.MoveTowards(body.position.x, player.position.x, moveSpeed * 0.25f * Time.fixedDeltaTime);
-            body.MovePosition(new Vector2(x, newY));
+            body.MovePosition(ApplyKnockback(new Vector2(x, newY)));
+        }
+
+        public void PushBack(Vector2 impulse)
+        {
+            knockback = Vector2.ClampMagnitude(knockback + impulse, 10);
+            // A contact with the player occurs inside the arena; retain that fact
+            // so knockback cannot leave an integrated enemy permanently outside.
+            if (approachPlayer) enteredArena = true;
+        }
+
+        Vector2 ApplyKnockback(Vector2 destination)
+        {
+            destination += knockback * Time.fixedDeltaTime;
+            knockback = Vector2.MoveTowards(knockback, Vector2.zero, 12 * Time.fixedDeltaTime);
+            if (approachPlayer && enteredArena)
+            {
+                var bounds = Integration.BattleArena.PlayerBounds(Camera.main, .65f);
+                destination.x = Mathf.Clamp(destination.x, bounds.xMin, bounds.xMax);
+                destination.y = Mathf.Clamp(destination.y, bounds.yMin, bounds.yMax);
+            }
+            return destination;
+        }
+
+        void OnTriggerEnter2D(Collider2D other) => ContactPlayer(other);
+        void OnTriggerStay2D(Collider2D other) => ContactPlayer(other);
+        void ContactPlayer(Collider2D other)
+        {
+            var game = Integration.IntegratedGame.Active;
+            if (IsDefeated || game == null || !game.Running || Time.time < nextPlayerContact ||
+                GetComponentInParent<Integration.IntegratedBossTarget>() != null) return;
+            var combat = other.GetComponentInParent<Integration.IntegratedCombat>();
+            if (combat == null) return;
+            nextPlayerContact = Time.time + .8f;
+            Vector2 away = (Vector2)(transform.position - combat.transform.position);
+            if (away.sqrMagnitude < .01f) away = Vector2.up;
+            combat.Hit(GetComponent<Collider2D>(), 1);
+            PushBack(away.normalized * 6);
         }
 
         private void FindPlayer()
@@ -211,6 +251,6 @@ namespace Taeyang
             Destroy(gameObject);
         }
 
-        public void ResetHealthForTesting() => CurrentHealth = maxHealth;
+        public void ResetHealthForTesting() { CurrentHealth = maxHealth; IsDefeated = false; }
     }
 }

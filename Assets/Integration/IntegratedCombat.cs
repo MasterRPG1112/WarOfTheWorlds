@@ -1,13 +1,13 @@
 using UnityEngine;
 using Jain;
 using Sanghyuk;
-using Taeyang;
 
 namespace Integration
 {
-    // Adapter for the team's movement, segmented HP, item data and skill prefabs.
+    // One shared hull; legacy team references remain available to saved scenes.
     public class IntegratedCombat : MonoBehaviour
     {
+        public const int MaxHealth = 8;
         public Player movement;
         public PlayerData data;
         public PlayerHp core;
@@ -16,94 +16,160 @@ namespace Integration
         public int selectedSkill = -1;
         public int bombs = 1;
         public int shotsFired, hitsTaken, skillUses;
-        float nextShot, nextSkill, protectedUntil;
+        public int[] equippedPatches = { -1, -1 };
+        public int ownedMask;
+        readonly float[] nextPatch = new float[4];
+        static readonly float[] cooldowns = { 8, 8, 2, 12 };
+        float protectedUntil;
+        public int Health => data != null ? Mathf.Clamp(data.PlayerHp, 0, MaxHealth) : 0;
+        public int RamDamage => IntegratedGame.Active != null && IntegratedGame.Active.shop != null &&
+            IntegratedGame.Active.shop.part3 > 0 ? 30 : 20;
+
+        void Awake()
+        {
+            if (movement == null) movement = GetComponent<Player>();
+            if (data == null) data = GetComponent<PlayerData>();
+            if (core == null) core = GetComponent<PlayerHp>();
+            foreach (var hp in GetComponentsInChildren<PlayerHp>(true)) hp.integrated = true;
+        }
+
         void Update()
         {
+            MirrorHealth();
+            RefreshPatchOwnership();
             var game = IntegratedGame.Active;
             if (game == null || !game.Running) return;
-            bool wingLost = false;
-            foreach (var hp in GetComponentsInChildren<PlayerHp>()) if (hp != core && hp.playerHp <= 0) wingLost = true;
-            movement.speed = (wingLost ? 3 : 5) + (game.shop.part2 > 0 ? 2 : 0);
-            // Items write PlayerData; segmented HP/UI use PlayerHp.
-            core.playerHp = Mathf.Clamp(data.PlayerHp, 0, 8);
-            if (core.playerHp <= 0) { game.End(false); return; }
-            if (Time.time >= nextShot) Fire();
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.LeftShift)) TrySkill();
-            if (Input.GetKeyDown(KeyCode.B)) TryConsumable(0);
-            if (Input.GetKeyDown(KeyCode.V)) TryConsumable(1);
-            if (Input.GetKeyDown(KeyCode.R)) TryConsumable(2);
-            if (Input.GetKeyDown(KeyCode.T)) game.TryTimeStop();
-            if (Input.GetKeyDown(KeyCode.X)) TryBomb();
+            if (movement != null) movement.speed = 5 + (game.shop != null && game.shop.part2 > 0 ? 2 : 0);
+            if (Health <= 0) { game.End(false); return; }
+            if (Input.GetKeyDown(KeyCode.Q)) UseSlot(0);
+            if (Input.GetKeyDown(KeyCode.E)) UseSlot(1);
+            if (Input.GetKeyDown(KeyCode.B)) TryUsePatch(0);
+            if (Input.GetKeyDown(KeyCode.V)) TryUsePatch(1);
+            if (Input.GetKeyDown(KeyCode.R)) TryUsePatch(2);
+            if (Input.GetKeyDown(KeyCode.T)) TryUsePatch(3);
         }
-        public void Fire()
+
+        void UseSlot(int slot)
         {
-            var game = IntegratedGame.Active;
-            if (bulletPrefab == null || movement == null || game == null || !game.Running) return;
-            nextShot = Time.time + fireInterval;
-            Vector2 launchDirection = movement.FacingDirection;
-            var rotation = Quaternion.Euler(0, 0, Mathf.Atan2(launchDirection.y, launchDirection.x) * Mathf.Rad2Deg - 90);
-            var go = Instantiate(bulletPrefab, transform.position + (Vector3)(launchDirection * .8f), rotation);
-            go.tag = "Untagged";
-            var body = go.GetComponent<Rigidbody2D>();
-            body.bodyType = RigidbodyType2D.Kinematic; body.gravityScale = 0;
-            foreach (var c in go.GetComponents<Collider2D>())
-            {
-                c.isTrigger = true;
-                foreach (var ownerCollider in GetComponentsInChildren<Collider2D>(true))
-                    Physics2D.IgnoreCollision(c, ownerCollider, true);
-            }
-            var missile = go.GetComponent<PlayerShot>();
-            if (missile == null) missile = go.AddComponent<PlayerShot>();
-            missile.damage = game.shop.part3 > 0 ? 20 : 12;
-            missile.Initialize(launchDirection);
-            shotsFired++;
+            if (equippedPatches != null && slot < equippedPatches.Length) TryUsePatch(equippedPatches[slot]);
         }
+
+        void MirrorHealth()
+        {
+            if (data == null) return;
+            data.PlayerHp = Health;
+            if (core != null) core.playerHp = Health;
+        }
+
+        // Source-compatible entry points: this game has no basic gun or free skills.
+        public void Fire() { }
+        public bool TrySkill() => false;
+        public bool TryBomb() => false;
+        public float SkillCooldown => selectedSkill >= 0 ? PatchCooldown(selectedSkill) : 0;
+
         public void Hit(Collider2D collider, int amount)
         {
-            if (IntegratedGame.Active == null || !IntegratedGame.Active.Running || Time.time < protectedUntil || data.Invin) return;
-            if (data.HaveShield > 0) { data.HaveShield = 0; protectedUntil = Time.time + .8f; return; }
-            if (IntegratedGame.Active.shop.part1 > 0 && core.playerHp <= amount) { IntegratedGame.Active.shop.part1 = 0; core.playerHp = 4; data.PlayerHp = 4; protectedUntil = Time.time + 2; return; }
-            var hp = collider.GetComponent<PlayerHp>();
-            if (hp == null) hp = core;
-            hp.playerHp = Mathf.Max(0, hp.playerHp - amount);
-            if (hp == core) data.PlayerHp = Mathf.CeilToInt(hp.playerHp);
-            else if (hp.playerHp == 0) { collider.enabled = false; movement.speed = 3; }
-            hitsTaken++; protectedUntil = Time.time + .8f;
-            if (core.playerHp <= 0) IntegratedGame.Active.End(false);
-        }
-        public bool TrySkill()
-        {
-            if (IntegratedGame.Active == null || !IntegratedGame.Active.Running || selectedSkill < 0 || Time.time < nextSkill) return false;
-            if (!CastSkill(selectedSkill)) return false;
-            nextSkill = Time.time + (selectedSkill == 2 ? 2 : 8); return true;
-        }
-        bool CastSkill(int kind)
-        {
-            GameObject prefab = kind == 0 ? movement.BHole : kind == 1 ? movement.GravityUnit : movement.ParryingUnit;
-            if (prefab == null) return false;
-            var go = Instantiate(prefab, transform.position, Quaternion.identity);
-            var effect = go.AddComponent<IntegratedSkillEffect>(); effect.owner = this; effect.kind = kind;
-            // Original prefabs use solid collisions, while Taeyang bullets use triggers.
-            foreach (var c in go.GetComponents<Collider2D>()) c.isTrigger = true;
-            skillUses++; return true;
-        }
-        public bool TryConsumable(int kind)
-        {
             var game = IntegratedGame.Active;
-            if (game == null || !game.Running || kind < 0 || kind > 2) return false;
-            var shop = game.shop;
-            int count = kind == 0 ? shop.pull : kind == 1 ? shop.slow : shop.reflex;
-            if (count <= 0 || !CastSkill(kind)) return false;
-            if (kind == 0) shop.pull--; else if (kind == 1) shop.slow--; else shop.reflex--;
+            if (game == null || !game.Running || data == null || amount <= 0 ||
+                Time.time < protectedUntil || data.Invin) return;
+            protectedUntil = Time.time + .8f;
+            Vector2 away = collider != null ? (Vector2)(transform.position - collider.bounds.center) : Vector2.zero;
+            if (away.sqrMagnitude < .01f) away = movement != null ? -movement.FacingDirection : Vector2.down;
+            if (movement != null) movement.AddKnockback(away.normalized * 5);
+            if (data.HaveShield > 0) { data.HaveShield--; return; }
+            hitsTaken++;
+            if (game.shop != null && game.shop.part1 > 0 && Health <= amount)
+            {
+                game.shop.part1 = 0;
+                data.PlayerHp = 4;
+            }
+            else data.PlayerHp = Mathf.Max(0, Health - amount);
+            MirrorHealth();
+            if (Health <= 0) game.End(false);
+        }
+
+        public void Heal(int amount)
+        {
+            if (data == null || amount <= 0) return;
+            data.PlayerHp = Mathf.Min(MaxHealth, Health + amount);
+            MirrorHealth();
+        }
+
+        public bool EquipPatch(int kind, int slot)
+        {
+            if (kind < 0 || kind > 3 || slot < 0 || slot > 1 || (ownedMask & (1 << kind)) == 0) return false;
+            if (equippedPatches == null || equippedPatches.Length != 2) equippedPatches = new[] { -1, -1 };
+            if (equippedPatches[1 - slot] == kind) return false;
+            equippedPatches[slot] = kind;
             return true;
         }
-        public bool TryBomb()
+
+        public bool IsEquipped(int kind) => kind >= 0 && kind < 4 && equippedPatches != null &&
+            equippedPatches.Length == 2 && (equippedPatches[0] == kind || equippedPatches[1] == kind);
+
+        public void GrantPatch(int kind, int amount = 1)
         {
-            if (bombs <= 0 || IntegratedGame.Active == null || !IntegratedGame.Active.Running || movement.Origin == null) return false;
-            var go = Instantiate(movement.Origin, new Vector3(0,-6,0),Quaternion.identity);
-            foreach (var c in go.GetComponents<Collider2D>()) c.isTrigger = true;
-            go.AddComponent<IntegratedBomb>(); bombs--; return true;
+            var shop = IntegratedGame.Active != null ? IntegratedGame.Active.shop : null;
+            if (kind < 0 || kind > 3 || amount < 0 || shop == null) return;
+            SetCount(kind, PatchCount(kind) + amount);
+            if (PatchCount(kind) <= 0) return;
+            ownedMask |= 1 << kind;
+            if (equippedPatches == null || equippedPatches.Length != 2) equippedPatches = new[] { -1, -1 };
+            if (!IsEquipped(kind))
+                for (int i = 0; i < 2; i++) if (equippedPatches[i] < 0) { EquipPatch(kind, i); break; }
         }
-        public float SkillCooldown => Mathf.Max(0, nextSkill - Time.time);
+
+        public void RefreshPatchOwnership()
+        {
+            for (int kind = 0; kind < 4; kind++)
+                if (PatchCount(kind) > 0 && (ownedMask & (1 << kind)) == 0) GrantPatch(kind, 0);
+        }
+
+        public int PatchCount(int kind)
+        {
+            var shop = IntegratedGame.Active != null ? IntegratedGame.Active.shop : null;
+            if (shop == null) return 0;
+            return Mathf.Max(0, kind == 0 ? shop.pull : kind == 1 ? shop.slow : kind == 2 ? shop.reflex : kind == 3 ? shop.stop : 0);
+        }
+
+        void SetCount(int kind, int count)
+        {
+            var shop = IntegratedGame.Active.shop;
+            if (kind == 0) shop.pull = count;
+            else if (kind == 1) shop.slow = count;
+            else if (kind == 2) shop.reflex = count;
+            else if (kind == 3) shop.stop = count;
+        }
+
+        public float PatchCooldown(int kind) => kind < 0 || kind > 3 ? 0 : Mathf.Max(0, nextPatch[kind] - Time.time);
+        public bool TryConsumable(int kind) => TryUsePatch(kind);
+
+        public bool TryUsePatch(int kind)
+        {
+            var game = IntegratedGame.Active;
+            if (game == null || !game.Running || kind < 0 || kind > 3 || !IsEquipped(kind) ||
+                (ownedMask & (1 << kind)) == 0 || PatchCount(kind) <= 0 || PatchCooldown(kind) > 0) return false;
+            if (kind == 3)
+            {
+                if (!game.ActivateTimeStop()) return false;
+            }
+            else
+            {
+                if (movement == null) return false;
+                GameObject prefab = kind == 0 ? movement.BHole : kind == 1 ? movement.GravityUnit : movement.ParryingUnit;
+                if (prefab == null) return false;
+                var go = Instantiate(prefab, transform.position, Quaternion.identity);
+                // Keep the team's graphics and disable legacy independent collision/timer logic.
+                foreach (var script in go.GetComponentsInChildren<MonoBehaviour>(true)) script.enabled = false;
+                foreach (var collider in go.GetComponentsInChildren<Collider2D>(true)) collider.enabled = false;
+                foreach (var body in go.GetComponentsInChildren<Rigidbody2D>(true)) body.simulated = false;
+                var effect = go.AddComponent<IntegratedSkillEffect>();
+                effect.owner = this; effect.kind = kind;
+            }
+            SetCount(kind, PatchCount(kind) - 1);
+            nextPatch[kind] = Time.time + cooldowns[kind];
+            skillUses++;
+            return true;
+        }
     }
 }

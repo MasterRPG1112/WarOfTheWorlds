@@ -20,6 +20,8 @@ public class HealItem : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        var combat = collision.GetComponentInParent<Integration.IntegratedCombat>();
+        if (combat != null) { combat.Heal(1); Destroy(gameObject); return; }
         if (collision.CompareTag("Player"))
         {
             Data.PlayerHp += 1;
