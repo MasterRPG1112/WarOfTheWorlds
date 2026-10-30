@@ -21,6 +21,8 @@ namespace Taeyang
         public Transform firePoint;
         // Opt-in on Stage 1 variants only; original EnemyTest prefabs retain their behavior.
         public bool stageOnePatterns;
+        // Opt-in for the integrated arena; legacy scenes retain their original movement.
+        public bool approachPlayer;
         [Range(1,3)] public int stageDifficulty = 1;
 
         public static event Action<EnemyShip, int> DestroyedByPlayer;
@@ -37,6 +39,7 @@ namespace Taeyang
         private float frequency;
         private float flashTimer;
         private Color baseColor;
+        private bool enteredArena;
 
         private void Awake()
         {
@@ -58,8 +61,7 @@ namespace Taeyang
             age += Time.deltaTime;
             if (player == null)
             {
-                GameObject candidate = GameObject.FindGameObjectWithTag("Player");
-                if (candidate != null) player = candidate.transform;
+                FindPlayer();
             }
             if (visuals != null)
             {
@@ -81,6 +83,22 @@ namespace Taeyang
         private void FixedUpdate()
         {
             if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
+            if (approachPlayer)
+            {
+                if (player == null) FindPlayer();
+                if (player == null) return;
+                if (Integration.BattleArena.PlayerBounds(Camera.main, 1).Contains(body.position)) enteredArena = true;
+                Vector2 towardPlayer = (Vector2)player.position - body.position;
+                float stoppingDistance = kind == EnemyKind.Heavy ? 3.8f : kind == EnemyKind.Interceptor ? 2.5f : 3f;
+                // Always enter the visible area before holding range, even when the player
+                // waits against an edge. Do not leave an off-screen ship parked and firing.
+                float remaining = towardPlayer.magnitude - (enteredArena ? stoppingDistance : 0);
+                Vector2 destination = remaining > 0
+                    ? body.position + towardPlayer.normalized * Mathf.Min(remaining, moveSpeed * Time.fixedDeltaTime)
+                    : body.position;
+                body.MovePosition(destination);
+                return;
+            }
             float y = body.position.y;
             float newY = y > settledY ? Mathf.MoveTowards(y, settledY, moveSpeed * Time.fixedDeltaTime) : y;
             float wave = Mathf.Sin(age * frequency) * driftWidth;
@@ -90,6 +108,17 @@ namespace Taeyang
             if (kind == EnemyKind.Bomber && player != null)
                 x = Mathf.MoveTowards(body.position.x, player.position.x, moveSpeed * 0.25f * Time.fixedDeltaTime);
             body.MovePosition(new Vector2(x, newY));
+        }
+
+        private void FindPlayer()
+        {
+            if (approachPlayer && Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.player != null)
+                player = Integration.IntegratedGame.Active.player.transform;
+            else
+            {
+                GameObject candidate = GameObject.FindGameObjectWithTag("Player");
+                if (candidate != null) player = candidate.transform;
+            }
         }
 
         private void FirePattern()

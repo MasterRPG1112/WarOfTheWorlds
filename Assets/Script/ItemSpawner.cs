@@ -5,10 +5,11 @@ public class ItemSpawner : MonoBehaviour
 {
     public GameObject itemPrefab;
 
-    public float spawnInterval = 5f; // 5ÃÊ °£°İ
+    public bool integratedArena;
+    public float spawnInterval = 5f; // 5ì´ˆ ê°„ê²©
     public float spawnRangeX = 8f;
     public float spawnY = 6f;
-    public float destroyTime = 10f; // 10ÃÊ ÈÄ »èÁ¦
+    public float destroyTime = 10f; // 10ì´ˆ í›„ ì‚­ì œ
 
     void Start()
     {
@@ -18,10 +19,17 @@ public class ItemSpawner : MonoBehaviour
     void SpawnItem()
     {
         float randomX = Random.Range(-spawnRangeX, spawnRangeX);
+        float y = spawnY;
+        if (integratedArena)
+        {
+            Rect view = Integration.BattleArena.ViewBounds();
+            randomX = Random.Range(view.xMin + 1, view.xMax - 1);
+            y = view.yMax + 1;
+        }
 
         Vector3 spawnPosition = new Vector3(
             randomX,
-            spawnY,
+            y,
             0f
         );
 
@@ -31,7 +39,7 @@ public class ItemSpawner : MonoBehaviour
             Quaternion.identity
         );
 
-        // »ı¼ºµÈ Å¬·ĞÀ» 10ÃÊ ÈÄ »èÁ¦
+        // ìƒì„±ëœ í´ë¡ ì„ 10ì´ˆ í›„ ì‚­ì œ
         Destroy(clone, destroyTime);
     }
 }

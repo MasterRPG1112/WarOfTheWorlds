@@ -75,7 +75,7 @@ namespace Integration.Editor
             {
                 foreach(var bullet in UnityEngine.Object.FindObjectsByType<PlayerShot>(FindObjectsSortMode.None)) UnityEngine.Object.Destroy(bullet.gameObject);
                 var enemy=UnityEngine.Object.Instantiate(d.enemyPrefabs[i],p.transform.position+Vector3.up*2,Quaternion.identity);
-                enemy.enabled=false;
+                enemy.moveSpeed=0; enemy.driftWidth=0; enemy.fireInterval=100;
                 until=Time.time+6; while(enemy!=null && Time.time<until) yield return null;
                 Assert(enemy==null,"Auto-fire physics destroys enemy type "+i);
             }

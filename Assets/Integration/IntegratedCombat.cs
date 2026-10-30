@@ -37,14 +37,26 @@ namespace Integration
         }
         public void Fire()
         {
-            if (bulletPrefab == null) return;
+            var game = IntegratedGame.Active;
+            if (bulletPrefab == null || movement == null || game == null || !game.Running) return;
             nextShot = Time.time + fireInterval;
-            var go = Instantiate(bulletPrefab, transform.position + Vector3.up * .8f, Quaternion.identity);
+            Vector2 launchDirection = movement.FacingDirection;
+            var rotation = Quaternion.Euler(0, 0, Mathf.Atan2(launchDirection.y, launchDirection.x) * Mathf.Rad2Deg - 90);
+            var go = Instantiate(bulletPrefab, transform.position + (Vector3)(launchDirection * .8f), rotation);
             go.tag = "Untagged";
             var body = go.GetComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Kinematic; body.gravityScale = 0;
-            foreach (var c in go.GetComponents<Collider2D>()) c.isTrigger = true;
-            go.AddComponent<PlayerShot>().damage = IntegratedGame.Active.shop.part3 > 0 ? 20 : 12; shotsFired++;
+            foreach (var c in go.GetComponents<Collider2D>())
+            {
+                c.isTrigger = true;
+                foreach (var ownerCollider in GetComponentsInChildren<Collider2D>(true))
+                    Physics2D.IgnoreCollision(c, ownerCollider, true);
+            }
+            var missile = go.GetComponent<PlayerShot>();
+            if (missile == null) missile = go.AddComponent<PlayerShot>();
+            missile.damage = game.shop.part3 > 0 ? 20 : 12;
+            missile.Initialize(launchDirection);
+            shotsFired++;
         }
         public void Hit(Collider2D collider, int amount)
         {
