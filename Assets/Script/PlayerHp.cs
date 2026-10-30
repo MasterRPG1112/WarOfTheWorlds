@@ -1,5 +1,5 @@
 using Sanghyuk;
-using UnityEditor.Overlays;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,9 +8,11 @@ namespace Jain
     public class PlayerHp : MonoBehaviour
     {
         public float playerHp;
+        public bool integrated;
 
         void Start()
         {
+            if (integrated) return;
             ReloadUI(); 
             GameDataManager.instance.LoadData();
             if (gameObject.CompareTag("Point1"))
@@ -43,6 +45,7 @@ namespace Jain
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
+            if (integrated) return;
             if (collision.CompareTag("Bullet"))
             {
                 Destroy(collision.gameObject);
@@ -104,9 +107,9 @@ namespace Jain
             Player point3 = GameObject.Find("Point3")?.GetComponent<Player>();
 
             player.speed = player.speed / (player.speed / 2);
-            if (point2 == null) Debug.Log("¿À¸¥ÂÊ ³¯°³´Â ÀÌ¹Ì ÆÄ¼Õ");
+            if (point2 == null) Debug.Log("ì˜¤ë¥¸ìª½ ë‚ ê°œëŠ” ì´ë¯¸ íŒŒì†");
             else point2.speed = point2.speed / (point2.speed / 2);
-            if (point3 == null) Debug.Log("¿ŞÂÊ ³¯°³´Â ÀÌ¹Ì ÆÄ¼Õ");
+            if (point3 == null) Debug.Log("ì™¼ìª½ ë‚ ê°œëŠ” ì´ë¯¸ íŒŒì†");
             else point3.speed = point3.speed / (point3.speed / 2);
             Destroy(gameObject);
         }

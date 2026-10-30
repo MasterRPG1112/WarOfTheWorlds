@@ -36,7 +36,7 @@ namespace Jain
 
         public void ReloadUI()
         {
-            HpBarInt.text = "" + playerHpScript.playerHp;
+            if (HpBarInt != null && playerHpScript != null) HpBarInt.text = "" + Mathf.CeilToInt(playerHpScript.playerHp);
         }
     }
 }

@@ -6,28 +6,29 @@ namespace Jain
 {
     public class Shop : MonoBehaviour
     {
-        //µ∑
+        //Îèà
         public int coin;
 
-        //øÏ¡÷º± ∆ƒ√˜ º“¿Ø ø©∫Œ
-        public int part1; //∫ÒªÛ µø∑¬ø¯
-        public int part2; //≈Õ∫∏ ø£¡¯
-        public int part3; //πÊ»£ √∂∞©≈∫
+        //Ïö∞Ï£ºÏÑ† ÌååÏ∏† ÏÜåÏú† Ïó¨Î∂Ä
+        public int part1; //ÎπÑÏÉÅ ÎèôÎ†•Ïõê
+        public int part2; //ÌÑ∞Î≥¥ ÏóîÏßÑ
+        public int part3; //Î∞©Ìò∏ Ï≤†Í∞ëÌÉÑ
 
-        //Ω∫≈◊¿Ã¡ˆ ≈¨∏ÆæÓ Ω√ ∆ƒ√˜ ±∏∏≈ ±««—
+        //Ïä§ÌÖåÏù¥ÏßÄ ÌÅ¥Î¶¨Ïñ¥ Ïãú ÌååÏ∏† Íµ¨Îß§ Í∂åÌïú
         public int partLicense;
 
-        //∆Øºˆ æ∆¿Ã≈€ º“¿Ø ø©∫Œ
-        public int stop; //Ω√∞£ ¡§¡ˆ
-        public int reflex; //∞¯∞› π›ªÁ
-        public int pull; //∫Ì∑¢»¶
-        public int slow; //∞®º”¿Â
+        //ÌäπÏàò ÏïÑÏù¥ÌÖú ÏÜåÏú† Ïó¨Î∂Ä
+        public int stop; //ÏãúÍ∞Ñ Ï†ïÏßÄ
+        public int reflex; //Í≥µÍ≤© Î∞òÏÇ¨
+        public int pull; //Î∏îÎûôÌôÄ
+        public int slow; //Í∞êÏÜçÏû•
 
         //UI
         public Text coinUI;
         public GameObject shopMenu;
 
-        void Start()
+        void Start() { Initialize(); }
+        public void Initialize()
         {
             GameDataManager.instance.LoadData();
             if (GameDataManager.instance.dataReset == 1) coin = 0;
@@ -66,7 +67,7 @@ namespace Jain
 
         public void StopBtn()
         {
-            //800∫ß
+            //800Î≤®
             if (coin >= 800)
             {
                 stop += 1;
@@ -80,7 +81,7 @@ namespace Jain
 
         public void ReflexBtn()
         {
-            //450∫ß
+            //450Î≤®
             if (coin >= 450)
             {
                 reflex += 1;
@@ -94,7 +95,7 @@ namespace Jain
 
         public void PullBtn()
         {
-            //600∫ß
+            //600Î≤®
             if (coin >= 600)
             {
                 pull += 1;
@@ -108,7 +109,7 @@ namespace Jain
 
         public void SlowBtn()
         {
-            //550∫ß
+            //550Î≤®
             if (coin >= 550)
             {
                 slow += 1;
@@ -182,7 +183,7 @@ namespace Jain
 
         void ReloadUI()
         {
-            coinUI.text = "≥≤¿∫ µ∑ : " + coin + "∫ß";
+            coinUI.text = "ÎÇ®ÏùÄ Îèà : " + coin + "Î≤®";
         }
     }
 }

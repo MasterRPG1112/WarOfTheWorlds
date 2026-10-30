@@ -1,35 +1,38 @@
 using System.Collections.Generic;
 using UnityEngine;
-using static Unity.U2D.Physics.PhysicsLayers;
+
 
 namespace Jain
 {
     public class GameDataManager : MonoBehaviour
     {
         public static GameDataManager instance;
+        public bool persistentStorage = true;
+        void Awake() { if (instance != null && instance != this) { Destroy(gameObject); return; } instance = this; }
+        void OnDestroy() { if (instance == this) instance = null; }
 
-        //ÇÃ·¹ÀÌ¾î °ü·Ã
+        //í”Œë ˆì´ì–´ ê´€ë ¨
         public float playerhp1;
         public float playerhp2;
         public float playerhp3;
 
-        //Á¡¼ö °ü·Ã
+        //ì ìˆ˜ ê´€ë ¨
         public int score;
         public int money;
 
-        //µ¥ÀÌÅÍ ¸®¼Â
+        //ë°ì´í„° ë¦¬ì…‹
         public int dataReset = 0;
 
-        //»óÁ¡ °ü·Ã
-        public int part1; //ºñ»ó µ¿·Â¿ø
-        public int part2; //ÅÍº¸ ¿£Áø
-        public int part3; //¹æÈ£ Ã¶°©Åº
-        public int stop; //½Ã°£ Á¤Áö
-        public int reflex; //°ø°İ ¹İ»ç
-        public int pull; //ºí·¢È¦
-        public int slow; //°¨¼ÓÀå
+        //ìƒì  ê´€ë ¨
+        public int part1; //ë¹„ìƒ ë™ë ¥ì›
+        public int part2; //í„°ë³´ ì—”ì§„
+        public int part3; //ë°©í˜¸ ì² ê°‘íƒ„
+        public int stop; //ì‹œê°„ ì •ì§€
+        public int reflex; //ê³µê²© ë°˜ì‚¬
+        public int pull; //ë¸”ë™í™€
+        public int slow; //ê°ì†ì¥
 
-        //¼øÀ§ °ü·Ã
+        //ìˆœìœ„ ê´€ë ¨
         [System.Serializable]
         public struct RankData
         {
@@ -59,19 +62,20 @@ namespace Jain
 
         public void SaveData()
         {
-            //ÇÃ·¹ÀÌ¾î °ü·Ã
+            if (!persistentStorage) return;
+            //í”Œë ˆì´ì–´ ê´€ë ¨
             PlayerPrefs.SetFloat("PlayerHp1", playerhp1);
             PlayerPrefs.SetFloat("PlayerHp2", playerhp2);
             PlayerPrefs.SetFloat("PlayerHp3", playerhp3);
 
-            //Á¡¼ö °ü·Ã
+            //ì ìˆ˜ ê´€ë ¨
             PlayerPrefs.SetInt("Score", score);
             PlayerPrefs.SetInt("Money", money);
 
-            //µ¥ÀÌÅÍ ¸®¼Â
+            //ë°ì´í„° ë¦¬ì…‹
             PlayerPrefs.SetInt("DataReset", dataReset);
 
-            //»óÁ¡ °ü·Ã
+            //ìƒì  ê´€ë ¨
             PlayerPrefs.SetInt("Part1", part1);
             PlayerPrefs.SetInt("Part2", part2);
             PlayerPrefs.SetInt("Part3", part3);
@@ -80,7 +84,7 @@ namespace Jain
             PlayerPrefs.SetInt("Pull", pull);
             PlayerPrefs.SetInt("Slow", slow);
 
-            //¼øÀ§ °ü·Ã
+            //ìˆœìœ„ ê´€ë ¨
             for (int i = 0; i < rank.Count; i++)
             {
                 PlayerPrefs.SetString($"RankName_{i}", rank[i].playerName);
@@ -91,19 +95,20 @@ namespace Jain
 
         public void LoadData()
         {
-            //ÇÃ·¹ÀÌ¾î °ü·Ã
+            if (!persistentStorage) return;
+            //í”Œë ˆì´ì–´ ê´€ë ¨
             playerhp1 = PlayerPrefs.GetFloat("PlayerHp1");
             playerhp2 = PlayerPrefs.GetFloat("PlayerHp2");
             playerhp3 = PlayerPrefs.GetFloat("PlayerHp3");
 
-            //Á¡¼ö °ü·Ã
+            //ì ìˆ˜ ê´€ë ¨
             score = PlayerPrefs.GetInt("Score");
             money = PlayerPrefs.GetInt("Money");
 
-            //µ¥ÀÌÅÍ ¸®¼Â
+            //ë°ì´í„° ë¦¬ì…‹
             dataReset = PlayerPrefs.GetInt("DataReset");
 
-            //»óÁ¡ °ü·Ã
+            //ìƒì  ê´€ë ¨
             part1 = PlayerPrefs.GetInt("Part1");
             part2 = PlayerPrefs.GetInt("Part2");
             part3 = PlayerPrefs.GetInt("Part3");
@@ -112,7 +117,7 @@ namespace Jain
             pull = PlayerPrefs.GetInt("Pull");
             slow = PlayerPrefs.GetInt("Slow");
 
-            //¼øÀ§ °ü·Ã
+            //ìˆœìœ„ ê´€ë ¨
             rank.Clear();
             int rankCount = PlayerPrefs.GetInt("RankCount", 0);
             for (int i = 0; i < rankCount; i++)
@@ -123,21 +128,21 @@ namespace Jain
             }
         }
 
-        // »õ·Î¿î Á¡¼ö¸¦ ·©Å·¿¡ Ãß°¡ÇÏ°í Á¤·Ä/ÀúÀåÇÏ´Â ÇÔ¼ö
+        // ìƒˆë¡œìš´ ì ìˆ˜ë¥¼ ë­í‚¹ì— ì¶”ê°€í•˜ê³  ì •ë ¬/ì €ì¥í•˜ëŠ” í•¨ìˆ˜
         public void AddRank(string playerName, int newScore)
         {
             rank.Add(new RankData(playerName, newScore));
 
-            // Á¡¼ö°¡ ³ôÀº ¼ø(³»¸²Â÷¼ø)À¸·Î Á¤·Ä
+            // ì ìˆ˜ê°€ ë†’ì€ ìˆœ(ë‚´ë¦¼ì°¨ìˆœ)ìœ¼ë¡œ ì •ë ¬
             rank.Sort((x, y) => y.stageScore.CompareTo(x.stageScore));
 
-            // 10°³¸¦ ÃÊ°úÇÏ¸é ÇÏÀ§ ±â·Ï Á¦°Å
+            // 10ê°œë¥¼ ì´ˆê³¼í•˜ë©´ í•˜ìœ„ ê¸°ë¡ ì œê±°
             if (rank.Count > maxRankCount)
             {
                 rank.RemoveRange(maxRankCount, rank.Count - maxRankCount);
             }
 
-            // PlayerPrefs¿¡ ÀúÀå
+            // PlayerPrefsì— ì €ì¥
             SaveData();
         }
     }

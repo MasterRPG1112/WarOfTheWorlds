@@ -21,6 +21,7 @@ namespace Taeyang
         }
         private void FixedUpdate()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             age+=Time.fixedDeltaTime;
             float x=stage == 3 ? originX+Mathf.Sin(age*1.8f)*1.2f : body.position.x+velocity.x*Time.fixedDeltaTime;
             body.MovePosition(new Vector2(x,body.position.y+velocity.y*Time.fixedDeltaTime));
@@ -29,6 +30,8 @@ namespace Taeyang
         }
         private void OnTriggerEnter2D(Collider2D other)
         {
+            var combat = other.GetComponentInParent<Integration.IntegratedCombat>();
+            if (combat != null) { combat.Hit(other, 1); Destroy(gameObject); return; }
             var player=other.GetComponent<DemoPlayer>();
             if(player != null) { player.TakeDamage(1); SimpleImpact.Spawn(transform.position,Color.white,.6f); Destroy(gameObject); }
             else if(other.CompareTag("Player")) { other.SendMessage("TakeDamage",1,SendMessageOptions.DontRequireReceiver); Destroy(gameObject); }
