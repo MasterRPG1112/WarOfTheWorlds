@@ -27,7 +27,7 @@ namespace Integration.Editor
             foreach (var p in UnityEngine.Object.FindObjectsByType<DemoPlayer>(FindObjectsSortMode.None)) UnityEngine.Object.DestroyImmediate(p.gameObject);
             foreach (var p in UnityEngine.Object.FindObjectsByType<EnemyDemoHUD>(FindObjectsSortMode.None)) UnityEngine.Object.DestroyImmediate(p);
             var director = UnityEngine.Object.FindFirstObjectByType<StageDirector>();
-            director.noBossCampaign = true; director.showDemoHUD = false; director.enabled = false;
+            director.noBossCampaign = false; director.allowMissingBossTestSkip = true; director.showDemoHUD = false; director.enabled = false;
             director.perimeterSpawns = true;
             Camera.main.orthographicSize = BattleArena.HalfHeight;
             director.bossPrefab = null; director.campaignBossPrefabs = new GameObject[3];
@@ -42,7 +42,7 @@ namespace Integration.Editor
             foreach (var b in player.GetComponentsInChildren<Rigidbody2D>()) if (b.gameObject != player) UnityEngine.Object.DestroyImmediate(b);
             var rb = player.GetComponent<Rigidbody2D>(); rb.gravityScale = 0; rb.constraints = RigidbodyConstraints2D.FreezeRotation; rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             foreach (var c in player.GetComponentsInChildren<Collider2D>()) c.isTrigger = true;
-            foreach (var hp in player.GetComponentsInChildren<PlayerHp>()) { hp.integrated = true; hp.playerHp = hp.gameObject == player ? 8 : 5; }
+            foreach (var hp in player.GetComponentsInChildren<PlayerHp>()) { if (hp.gameObject != player) UnityEngine.Object.DestroyImmediate(hp); else { hp.integrated = true; hp.playerHp = 8; } }
             var data = player.AddComponent<PlayerData>(); data.PlayerHp = 8; movement.Data = data; movement.Cam = Camera.main.gameObject;
             movement.Origin = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Sanghyuk/Skill/Prefeb/Origin.prefab");
             movement.BHole = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Sanghyuk/Skill/Prefeb/Blackhole.prefab");
@@ -55,7 +55,8 @@ namespace Integration.Editor
             var game = new GameObject("Integrated Campaign").AddComponent<IntegratedGame>(); game.director = director; game.player = combat;
             game.score = UnityEngine.Object.FindFirstObjectByType<Score>();
             game.shop = UnityEngine.Object.FindFirstObjectByType<Shop>(FindObjectsInactive.Include);
-            game.hpUI = UnityEngine.Object.FindObjectsByType<PlayerHpUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var ui in UnityEngine.Object.FindObjectsByType<PlayerHpUI>(FindObjectsInactive.Include, FindObjectsSortMode.None)) { ui.gameObject.SetActive(false); UnityEngine.Object.DestroyImmediate(ui); }
+            game.hpUI = new PlayerHpUI[0];
             foreach (var exit in UnityEngine.Object.FindObjectsByType<ExitMenu>(FindObjectsInactive.Include, FindObjectsSortMode.None)) UnityEngine.Object.DestroyImmediate(exit);
             var oldExit = GameObject.Find("ExitMenu"); if (oldExit != null) oldExit.SetActive(false);
             if (game.shop == null) throw new Exception("Missing team Shop UI");
@@ -67,11 +68,7 @@ namespace Integration.Editor
             var scaler = canvas.GetComponent<CanvasScaler>(); scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1920,1080);
             font = game.score.scoreUI.font;
             game.status = Text(canvas.transform, "Status", "", new Vector2(1400,120), new Vector2(0,440)); game.status.fontSize = 22;
-            game.selectionPanel = Panel(canvas.transform, "Skill Selection");
-            Text(game.selectionPanel.transform, "Title", "CHOOSE SKILL", new Vector2(600,65), new Vector2(0,150));
-            string[] labels = {"Black Hole - remove nearby bullets", "Gravity - slow nearby bullets", "Parry - block and return fire"};
-            UnityAction[] choices = {game.SelectBlackHole, game.SelectGravity, game.SelectParry};
-            for (int i=0;i<3;i++) Button(game.selectionPanel.transform, labels[i], new Vector2(0,55-i*75), choices[i]);
+            game.selectionPanel = null;
             game.pausePanel = Panel(canvas.transform, "Pause"); Text(game.pausePanel.transform,"Title","PAUSED",new Vector2(600,60),new Vector2(0,140));
             Button(game.pausePanel.transform,"RESUME",new Vector2(0,40),game.TogglePause);
             Button(game.pausePanel.transform,"RESTART",new Vector2(0,-40),game.Restart); game.pausePanel.SetActive(false);
@@ -80,7 +77,13 @@ namespace Integration.Editor
             Button(game.resultPanel.transform,"RESTART",new Vector2(0,-60),game.Restart); game.resultPanel.SetActive(false);
             Button(game.resultPanel.transform,"MAIN MENU",new Vector2(0,-140),game.BackToMenu);
             // Existing shop is now accessible during pause, with time held by the flow controller.
-            Button(game.pausePanel.transform,"SHOP",new Vector2(0,-120),game.OpenShop);
+            game.intermissionPanel = new GameObject("Stage shop controls",typeof(RectTransform),typeof(Canvas),typeof(GraphicRaycaster));
+            game.intermissionPanel.transform.SetParent(canvas.transform,false);
+            var irt=game.intermissionPanel.GetComponent<RectTransform>();irt.anchorMin=Vector2.zero;irt.anchorMax=Vector2.one;irt.sizeDelta=Vector2.zero;
+            var ic=game.intermissionPanel.GetComponent<Canvas>();ic.overrideSorting=true;ic.sortingOrder=240;
+            Button(game.intermissionPanel.transform,"다음 스테이지",new Vector2(0,-430),game.ContinueAfterShop);game.intermissionPanel.SetActive(false);
+            var hud=new GameObject("Unified HP and Patch HUD").AddComponent<DesignHud>();hud.game=game;hud.font=font;
+            game.status.gameObject.SetActive(false);game.score.scoreUI.gameObject.SetActive(false);
             var shopCanvas = game.shop.shopMenu.GetComponent<Canvas>();
             if (shopCanvas == null) shopCanvas = game.shop.shopMenu.AddComponent<Canvas>();
             shopCanvas.overrideSorting = true; shopCanvas.sortingOrder = 200;
@@ -94,6 +97,19 @@ namespace Integration.Editor
                 spawner.spawnRangeX = BattleArena.HalfHeight * (16f/9f) - 1;
                 spawner.spawnY = BattleArena.HalfHeight + 1; spawner.destroyTime = 20;
                 spawner.spawnInterval = name == "Meteorite" ? 13 : 24;
+            }
+            Directory.CreateDirectory("Assets/Integration/Prefabs");
+            string[] icons={"Assets/Sanghyuk/Skill/Prefeb/Blackhole.prefab","Assets/Sanghyuk/Skill/Prefeb/GravityUnit.prefab","Assets/Sanghyuk/Skill/Prefeb/ParryingUnit.prefab","Assets/MC/Prefeb/Invincibility.prefab"};
+            for(int k=0;k<4;k++)
+            {
+                var go=new GameObject("Patch "+k);var sr=go.AddComponent<SpriteRenderer>();
+                var sourceVisual=AssetDatabase.LoadAssetAtPath<GameObject>(icons[k]).GetComponentInChildren<SpriteRenderer>();
+                sr.sprite=sourceVisual.sprite;sr.sharedMaterial=sourceVisual.sharedMaterial;sr.color=sourceVisual.color;
+                var rbp=go.AddComponent<Rigidbody2D>();rbp.bodyType=RigidbodyType2D.Kinematic;rbp.useFullKinematicContacts=true;
+                go.AddComponent<CircleCollider2D>().isTrigger=true;go.AddComponent<PatchPickup>().kind=k;
+                go.transform.localScale=Vector3.one*.65f;
+                var prefab=PrefabUtility.SaveAsPrefabAsset(go,"Assets/Integration/Prefabs/Patch_"+k+".prefab");UnityEngine.Object.DestroyImmediate(go);
+                var sp=new GameObject("Patch drop "+k).AddComponent<ItemSpawner>();sp.itemPrefab=prefab;sp.integratedArena=true;sp.spawnInterval=28+k*2;sp.destroyTime=22;
             }
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets(); Validate(); BuildMenu(); AssetDatabase.Refresh();
@@ -191,12 +207,12 @@ namespace Integration.Editor
         {
             var scene=EditorSceneManager.OpenScene(ScenePath);
             var game=UnityEngine.Object.FindFirstObjectByType<IntegratedGame>();
-            if(game==null || game.player==null || game.score==null || game.shop==null || game.hpUI.Length!=3 || !game.director.noBossCampaign) throw new Exception("Integration wiring");
+            if(game==null || game.player==null || game.score==null || game.shop==null || game.hpUI.Length!=0 || !game.director.allowMissingBossTestSkip) throw new Exception("Integration wiring");
             if(game.player.bulletPrefab==null || game.player.movement.BHole==null || game.player.movement.GravityUnit==null || game.player.movement.ParryingUnit==null) throw new Exception("Combat prefab references");
             foreach(var root in scene.GetRootGameObjects()) foreach(var t in root.GetComponentsInChildren<Transform>(true))
                 if(GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)>0) throw new Exception("Missing script: "+t.name);
             if(UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Length!=1 || UnityEngine.Object.FindObjectsByType<DemoPlayer>(FindObjectsSortMode.None).Length!=0) throw new Exception("Duplicate camera/demo");
-            File.WriteAllText("../integration-scene-validation.txt","PASS: integrated scene, real player, three HP UI references, five enemies, combat/skill references, no missing scene scripts, one camera, no DemoPlayer.\n");
+            File.WriteAllText("../integration-scene-validation.txt","PASS: integrated scene, real player, unified HP and patch HUD, five enemies, combat/skill references, no missing scene scripts, one camera, no DemoPlayer.\n");
         }
         public static void BuildWindows()
         {

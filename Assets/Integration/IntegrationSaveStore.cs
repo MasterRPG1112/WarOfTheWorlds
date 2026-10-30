@@ -23,13 +23,17 @@ namespace Integration
         public int reflex;
         public int pull;
         public int slow;
+        // Retained solely so v1 JSON and older Editor sources remain readable.
         public int selectedSkill = -1;
+        public int ownedMask;
+        public int patchSlot0 = -1;
+        public int patchSlot1 = -1;
     }
 
     [Serializable]
     public class SaveFile
     {
-        public int version = 1;
+        public int version = 2;
         public Checkpoint checkpoint;
         public List<GameDataManager.RankData> ranks = new List<GameDataManager.RankData>();
         public float volume = 1;
@@ -86,7 +90,7 @@ namespace Integration
                 if (json.Length < 2 || json[0] != '{' || json[json.Length - 1] != '}')
                     throw new FormatException("The save is not a JSON object.");
                 SaveFile loaded = JsonUtility.FromJson<SaveFile>(json);
-                if (loaded == null || loaded.version != 1)
+                if (loaded == null || (loaded.version != 1 && loaded.version != 2))
                     throw new FormatException("The save version is unsupported.");
                 rejectedDiskFile = !Validate(loaded);
                 data = loaded;
@@ -181,22 +185,22 @@ namespace Integration
             testSavedData = null;
         }
 
-        // Invalid stage/HP data disables continuation rather than silently restoring another stage.
+        // Invalid stages disable continuation. HP is one pool; v1 wing HP and the
+        // former free selected skill have no gameplay meaning after migration.
         static bool Validate(SaveFile save)
         {
             bool validCheckpoint = true;
             if (save.checkpoint != null)
             {
                 Checkpoint checkpoint = save.checkpoint;
-                if (checkpoint.stage < 1 || checkpoint.stage > 3 || checkpoint.coreHp < 1 || checkpoint.coreHp > 8 ||
-                    checkpoint.leftHp < 0 || checkpoint.leftHp > 5 || checkpoint.rightHp < 0 || checkpoint.rightHp > 5 ||
-                    checkpoint.selectedSkill < -1 || checkpoint.selectedSkill > 2)
+                if (checkpoint.stage < 1 || checkpoint.stage > 3)
                 {
                     save.checkpoint = null;
                     validCheckpoint = false;
                 }
                 else
                 {
+                    checkpoint.coreHp = Mathf.Clamp(checkpoint.coreHp, 1, 8);
                     checkpoint.score = Mathf.Max(0, checkpoint.score);
                     checkpoint.money = Mathf.Max(0, checkpoint.money);
                     checkpoint.part1 = Mathf.Max(0, checkpoint.part1);
@@ -206,9 +210,28 @@ namespace Integration
                     checkpoint.reflex = Mathf.Max(0, checkpoint.reflex);
                     checkpoint.pull = Mathf.Max(0, checkpoint.pull);
                     checkpoint.slow = Mathf.Max(0, checkpoint.slow);
+                    // v1 had no equipment slots. Ignore default zero slot values
+                    // from absent JSON fields rather than granting a free patch.
+                    if (save.version == 1)
+                    {
+                        checkpoint.ownedMask = 0;
+                        checkpoint.patchSlot0 = checkpoint.patchSlot1 = -1;
+                    }
+                    checkpoint.ownedMask &= 15;
+                    if (checkpoint.pull > 0) checkpoint.ownedMask |= 1;
+                    if (checkpoint.slow > 0) checkpoint.ownedMask |= 2;
+                    if (checkpoint.reflex > 0) checkpoint.ownedMask |= 4;
+                    if (checkpoint.stop > 0) checkpoint.ownedMask |= 8;
+                    checkpoint.patchSlot0 = ValidatePatchSlot(checkpoint.patchSlot0);
+                    checkpoint.patchSlot1 = ValidatePatchSlot(checkpoint.patchSlot1);
+                    if (checkpoint.patchSlot1 == checkpoint.patchSlot0) checkpoint.patchSlot1 = -1;
+                    // Empty stock is allowed only for a previously owned patch; malformed
+                    // equipment fields must never create free ownership during load.
+                    if (checkpoint.patchSlot0 >= 0 && (checkpoint.ownedMask & (1 << checkpoint.patchSlot0)) == 0) checkpoint.patchSlot0 = -1;
+                    if (checkpoint.patchSlot1 >= 0 && (checkpoint.ownedMask & (1 << checkpoint.patchSlot1)) == 0) checkpoint.patchSlot1 = -1;
                 }
             }
-            save.version = 1;
+            save.version = 2;
             save.volume = float.IsNaN(save.volume) || float.IsInfinity(save.volume) ? 1 : Mathf.Clamp01(save.volume);
             if (save.ranks == null) save.ranks = new List<GameDataManager.RankData>();
             for (int index = 0; index < save.ranks.Count; index++)
@@ -223,5 +246,7 @@ namespace Integration
             if (save.ranks.Count > 10) save.ranks.RemoveRange(10, save.ranks.Count - 10);
             return validCheckpoint;
         }
+
+        static int ValidatePatchSlot(int kind) => kind >= 0 && kind < 4 ? kind : -1;
     }
 }

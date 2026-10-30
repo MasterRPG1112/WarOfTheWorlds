@@ -21,6 +21,7 @@ namespace Sanghyuk
         float moveY;
         public Vector2 FacingDirection { get; private set; } = Vector2.up;
         Vector2 integratedInput;
+        Vector2 desiredFacing = Vector2.up, driveVelocity, knockbackVelocity;
         Integration.IntegratedCombat integratedCombat;
         const float BoundaryMargin = 1.6f;
         private void Awake()
@@ -38,23 +39,26 @@ namespace Sanghyuk
                 Mathf.Abs(input.y) > .01f ? Mathf.Sign(input.y) : 0).normalized;
             if (integratedInput.sqrMagnitude > .01f)
             {
-                FacingDirection = integratedInput;
-                float angle = Mathf.Atan2(integratedInput.y, integratedInput.x) * Mathf.Rad2Deg - 90;
-                thisRigi.rotation = angle;
-                transform.rotation = Quaternion.Euler(0,0,angle);
+                desiredFacing = integratedInput;
             }
             var bounds = Integration.BattleArena.PlayerBounds(Camera.main, BoundaryMargin);
             thisRigi.position = new Vector2(Mathf.Clamp(thisRigi.position.x,bounds.xMin,bounds.xMax),
                 Mathf.Clamp(thisRigi.position.y,bounds.yMin,bounds.yMax));
-            thisRigi.linearVelocity = integratedInput * speed;
         }
+        public void AddKnockback(Vector2 impulse) { knockbackVelocity = Vector2.ClampMagnitude(knockbackVelocity + impulse,8); }
         void FixedUpdate()
         {
             if (integratedCombat == null || thisRigi == null) return;
             var game = Integration.IntegratedGame.Active;
             if (Time.timeScale == 0 || game == null || !game.Running) { thisRigi.linearVelocity = Vector2.zero; return; }
             var bounds = Integration.BattleArena.PlayerBounds(Camera.main, BoundaryMargin);
-            Vector2 destination = thisRigi.position + integratedInput * speed * Time.fixedDeltaTime;
+            driveVelocity = Vector2.MoveTowards(driveVelocity,integratedInput * speed,
+                (integratedInput.sqrMagnitude > 0 ? 35 : 45) * Time.fixedDeltaTime);
+            float desiredAngle = Mathf.Atan2(desiredFacing.y,desiredFacing.x)*Mathf.Rad2Deg-90;
+            thisRigi.rotation = Mathf.MoveTowardsAngle(thisRigi.rotation,desiredAngle,720*Time.fixedDeltaTime);
+            FacingDirection = Quaternion.Euler(0,0,thisRigi.rotation) * Vector2.up;
+            Vector2 destination = thisRigi.position + (driveVelocity + knockbackVelocity) * Time.fixedDeltaTime;
+            knockbackVelocity = Vector2.MoveTowards(knockbackVelocity,Vector2.zero,22*Time.fixedDeltaTime);
             destination.x = Mathf.Clamp(destination.x,bounds.xMin,bounds.xMax);
             destination.y = Mathf.Clamp(destination.y,bounds.yMin,bounds.yMax);
             thisRigi.linearVelocity = (destination - thisRigi.position) / Time.fixedDeltaTime;
