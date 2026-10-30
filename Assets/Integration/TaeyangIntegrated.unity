@@ -900,9 +900,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawner
   itemPrefab: {fileID: 6578489219424403266, guid: 1b07bdb6d0b4e1b41bac50fa5b8adc25, type: 3}
   spawnInterval: 24
-  spawnRangeX: 6.8
-  spawnY: 5.5
-  destroyTime: 10
+  integratedArena: 1
+  spawnRangeX: 13.222222
+  spawnY: 9
+  destroyTime: 20
 --- !u!4 &208256862
 Transform:
   m_ObjectHideFlags: 0
@@ -1166,9 +1167,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawner
   itemPrefab: {fileID: 355901292966783772, guid: 734189060f283ab46b5418c6a3015ff9, type: 3}
   spawnInterval: 24
-  spawnRangeX: 6.8
-  spawnY: 5.5
-  destroyTime: 10
+  integratedArena: 1
+  spawnRangeX: 13.222222
+  spawnY: 9
+  destroyTime: 20
 --- !u!4 &276757321
 Transform:
   m_ObjectHideFlags: 0
@@ -2446,9 +2448,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawner
   itemPrefab: {fileID: 4095554852020917779, guid: 7e1e1d69e4640a740aaee7eec7813cf0, type: 3}
   spawnInterval: 13
-  spawnRangeX: 6.8
-  spawnY: 5.5
-  destroyTime: 10
+  integratedArena: 1
+  spawnRangeX: 13.222222
+  spawnY: 9
+  destroyTime: 20
 --- !u!4 &518595959
 Transform:
   m_ObjectHideFlags: 0
@@ -4061,6 +4064,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   noBossCampaign: 1
+  perimeterSpawns: 1
   showDemoHUD: 0
 --- !u!4 &1060268911
 Transform:
@@ -4848,7 +4852,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 8
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -5633,9 +5637,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemSpawner
   itemPrefab: {fileID: 8881541118431691905, guid: fba9b2a0fcb9df94a87603a7936f1f52, type: 3}
   spawnInterval: 24
-  spawnRangeX: 6.8
-  spawnY: 5.5
-  destroyTime: 10
+  integratedArena: 1
+  spawnRangeX: 13.222222
+  spawnY: 9
+  destroyTime: 20
 --- !u!4 &1609095848
 Transform:
   m_ObjectHideFlags: 0

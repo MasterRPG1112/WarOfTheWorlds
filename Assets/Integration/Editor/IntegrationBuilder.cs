@@ -28,6 +28,8 @@ namespace Integration.Editor
             foreach (var p in UnityEngine.Object.FindObjectsByType<EnemyDemoHUD>(FindObjectsSortMode.None)) UnityEngine.Object.DestroyImmediate(p);
             var director = UnityEngine.Object.FindFirstObjectByType<StageDirector>();
             director.noBossCampaign = true; director.showDemoHUD = false; director.enabled = false;
+            director.perimeterSpawns = true;
+            Camera.main.orthographicSize = BattleArena.HalfHeight;
             director.bossPrefab = null; director.campaignBossPrefabs = new GameObject[3];
             var source = EditorSceneManager.OpenScene("Assets/Scenes/Stage1.unity", OpenSceneMode.Additive);
             foreach (var root in source.GetRootGameObjects())
@@ -87,8 +89,11 @@ namespace Integration.Editor
             foreach (var name in new[]{"Heal","Shield","Invincibility","Meteorite"})
             {
                 var spawner = new GameObject(name+" Spawner").AddComponent<ItemSpawner>();
+                spawner.integratedArena = true;
                 spawner.itemPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/MC/Prefeb/"+name+".prefab");
-                spawner.spawnRangeX = 6.8f; spawner.spawnY = 5.5f; spawner.spawnInterval = name == "Meteorite" ? 13 : 24;
+                spawner.spawnRangeX = BattleArena.HalfHeight * (16f/9f) - 1;
+                spawner.spawnY = BattleArena.HalfHeight + 1; spawner.destroyTime = 20;
+                spawner.spawnInterval = name == "Meteorite" ? 13 : 24;
             }
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets(); Validate(); BuildMenu(); AssetDatabase.Refresh();

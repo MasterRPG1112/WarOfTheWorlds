@@ -115,20 +115,41 @@ namespace Integration
             game.selectionPanel.GetComponentsInChildren<Button>()[0].onClick.Invoke();
             Require(game.Running, "Serialized skill button starts actual gameplay");
             // The full gameplay suite tests lethal damage separately. Keep this visual run alive.
-            float gameplayUntil = Time.realtimeSinceStartup + 10;
+            float gameplayUntil = Time.realtimeSinceStartup + 26;
+            int spawnDirections = 0;
+            bool observedLock = false, observedTurn = false;
             while (Time.realtimeSinceStartup < gameplayUntil)
             {
                 game.player.data.Invin = true;
                 game.player.data.PlayerHp = 8;
                 game.player.core.playerHp = 8;
+                if (game.director.LastSpawnDirection >= 0) spawnDirections |= 1 << game.director.LastSpawnDirection;
+                foreach (var shot in FindObjectsByType<PlayerShot>(FindObjectsSortMode.None))
+                {
+                    observedLock |= shot.CurrentTarget != null;
+                    observedTurn |= Vector2.Dot(shot.Heading, game.player.movement.FacingDirection) < .99f;
+                }
                 yield return null;
             }
-            report.AppendLine("Visual-run assistance: player invulnerability/HP replenishment during 10-second gameplay capture.");
+            report.AppendLine("Visual-run assistance: player invulnerability/HP replenishment during 26-second gameplay capture.");
+            Require(Camera.main.orthographicSize == BattleArena.HalfHeight, "Standalone arena retains the expanded camera bounds");
+            Require(spawnDirections == 255, "Standalone waves exercise all eight perimeter spawn sectors");
+            Require(observedLock && observedTurn, "Standalone guided missiles acquire targets and change heading");
             game.player.TrySkill();
             Require(game.player.shotsFired > 0 && game.director.Elapsed > 0, "Standalone gameplay advances and automatically fires");
             report.AppendLine("Observed stage=" + game.director.stageNumber + "; elapsed=" + game.director.Elapsed +
                 "; shots=" + game.player.shotsFired + "; kills=" + game.Kills);
             Capture("06-gameplay.png");
+            for (int direction = 0; direction < 8; direction++)
+            {
+                var expected = BattleArena.Direction(direction);
+                game.player.movement.ApplyMovementInput(expected);
+                game.player.movement.ApplyMovementInput(Vector2.zero);
+                yield return null;
+                Require(Vector2.Dot((Vector2)game.player.transform.up,expected) > .999f,
+                    "Standalone facing and stop retention " + direction);
+                Capture("06-facing-"+direction+".png");
+            }
             game.TogglePause();
             Require(!game.Running && Time.timeScale == 0, "Pause stops standalone gameplay");
             Capture("07-pause.png");
