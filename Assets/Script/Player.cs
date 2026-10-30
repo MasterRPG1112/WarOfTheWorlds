@@ -33,7 +33,7 @@ namespace Sanghyuk
             float posX = Mathf.Clamp(poslnWorld.x, 0, Screen.width);
             float posY = Mathf.Clamp(poslnWorld.y, 0, Screen.height);
 
-            Vector3 poslnScreen = Camera.main.ScreenToWorldPoint(new Vector3(posX, posY, 0));
+            Vector3 poslnScreen = Camera.main.ScreenToWorldPoint(new Vector3(posX, posY, poslnWorld.z));
 
             thisRigi.position = new Vector3(poslnScreen.x, poslnScreen.y, 0);
         }
@@ -72,9 +72,11 @@ namespace Sanghyuk
         }
         void Update()
         {
+            if (Time.timeScale == 0) { if (thisRigi != null) thisRigi.linearVelocity = Vector2.zero; return; }
             moveX = Input.GetAxis("Horizontal");
             moveY = Input.GetAxis("Vertical");
             Move();
+            if (GetComponent<Integration.IntegratedCombat>() != null) return;
             Bomb();
             BlackH();
             Grav();

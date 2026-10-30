@@ -10,6 +10,7 @@ namespace Taeyang
         [Min(0.2f)] public float lifetime = 8f;
         public int enemyDamage = 20;
         public Color impactColor = new Color(0.5f, 0.9f, 1f, 1f);
+        [System.NonSerialized] public float externalSpeedFactor = 1;
 
         private EnemyShip owner;
         private Transform target;
@@ -60,15 +61,17 @@ namespace Taeyang
 
         private void Update()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             remaining -= Time.deltaTime;
             if (remaining <= 0f) Destroy(gameObject);
         }
 
         private void FixedUpdate()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             if (curved)
             {
-                curveAge += Time.fixedDeltaTime;
+                curveAge += Time.fixedDeltaTime * externalSpeedFactor;
                 float t = Mathf.Clamp01(curveAge / curveDuration);
                 Vector2 next = Bezier(curveStart, curveControl, curveEnd, t);
                 direction = (next - body.position).normalized;
@@ -87,7 +90,7 @@ namespace Taeyang
                     maxRadians * Mathf.Rad2Deg) * Mathf.Deg2Rad;
                 direction = new Vector2(Mathf.Cos(newAngle), Mathf.Sin(newAngle));
             }
-            body.MovePosition(body.position + direction * (speed * speedScale * Time.fixedDeltaTime));
+            body.MovePosition(body.position + direction * (speed * speedScale * externalSpeedFactor * Time.fixedDeltaTime));
             RotateToDirection();
         }
 
@@ -99,6 +102,9 @@ namespace Taeyang
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (resolved) return;
+            var combat = other.GetComponentInParent<Integration.IntegratedCombat>();
+            if (combat != null) { resolved = true; combat.Hit(other, 1); Destroy(gameObject); return; }
+            if (Integration.IntegratedGame.Active != null) return;
             EnemyShip enemy = other.GetComponent<EnemyShip>();
             if (enemy != null && enemy != owner)
             {

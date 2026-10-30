@@ -54,6 +54,7 @@ namespace Taeyang
 
         private void Update()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             age += Time.deltaTime;
             if (player == null)
             {
@@ -79,6 +80,7 @@ namespace Taeyang
 
         private void FixedUpdate()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             float y = body.position.y;
             float newY = y > settledY ? Mathf.MoveTowards(y, settledY, moveSpeed * Time.fixedDeltaTime) : y;
             float wave = Mathf.Sin(age * frequency) * driftWidth;

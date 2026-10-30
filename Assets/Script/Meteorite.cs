@@ -20,6 +20,8 @@ public class Meteorite : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        var combat = collision.GetComponentInParent<Integration.IntegratedCombat>();
+        if (combat != null) { combat.Hit(collision, 1); Destroy(gameObject); return; }
         if (collision.CompareTag("Player"))
         {
             Data.PlayerHp -= 1;

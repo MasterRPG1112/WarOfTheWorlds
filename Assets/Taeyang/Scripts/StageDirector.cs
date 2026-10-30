@@ -20,6 +20,8 @@ namespace Taeyang
         public int Wave => Mathf.Min(5, (int)(Elapsed / 60) + 1);
         public int SpawnTicks { get; private set; }
         public const float Duration = 300;
+        public bool noBossCampaign;
+        public bool showDemoHUD = true;
         public float SpawnInterval => stageNumber + 2;
         private float nextSpawn, nextObstacle = 7;
         private GameObject boss;
@@ -57,6 +59,7 @@ namespace Taeyang
             {
                 foreach(var p in FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None)) Destroy(p.gameObject);
                 foreach(var p in FindObjectsByType<StageObstacle>(FindObjectsSortMode.None)) Destroy(p.gameObject);
+                if (noBossCampaign) { State = Phase.Clear; stageCleared.Invoke(); return; }
                 State = Phase.AwaitingBoss;
                 bossRequested.Invoke();
                 if(CurrentBoss != null && State == Phase.AwaitingBoss) AttachBoss(Instantiate(CurrentBoss,bossPosition,Quaternion.identity));
@@ -112,6 +115,7 @@ namespace Taeyang
         }
         private void OnGUI()
         {
+            if (!showDemoHUD) return;
             float scale = Mathf.Min(Screen.width/960f,Screen.height/540f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale,scale,1));
             GUI.Box(new Rect(14,12,470,110),GUIContent.none);

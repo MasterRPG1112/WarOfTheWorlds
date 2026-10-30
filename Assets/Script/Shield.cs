@@ -13,7 +13,7 @@ public class Shield : MonoBehaviour
         Vector3 currentPos = transform.position;
         currentPos.y -= 1.0f * Time.deltaTime;
         transform.position = currentPos;
-        if (Data.HaveShield == 1)
+        if (Data.HaveShield == 1 && Integration.IntegratedGame.Active == null)
         {
             Debug.Log("1");
         }
