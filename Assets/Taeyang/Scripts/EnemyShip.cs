@@ -21,7 +21,9 @@ namespace Taeyang
         public Transform firePoint;
         // Opt-in on Stage 1 variants only; original EnemyTest prefabs retain their behavior.
         public bool stageOnePatterns;
-        [Range(1,3)] public int stageDifficulty = 1;
+        // Opt-in for the integrated arena; legacy scenes retain their original movement.
+        public bool approachPlayer;
+        [Range(1, 3)] public int stageDifficulty = 1;
 
         public static event Action<EnemyShip, int> DestroyedByPlayer;
         public int CurrentHealth { get; private set; }
@@ -37,6 +39,9 @@ namespace Taeyang
         private float frequency;
         private float flashTimer;
         private Color baseColor;
+        private bool enteredArena;
+        private Vector2 knockback;
+        private float nextPlayerContact;
 
         private void Awake()
         {
@@ -54,11 +59,11 @@ namespace Taeyang
 
         private void Update()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             age += Time.deltaTime;
             if (player == null)
             {
-                GameObject candidate = GameObject.FindGameObjectWithTag("Player");
-                if (candidate != null) player = candidate.transform;
+                FindPlayer();
             }
             if (visuals != null)
             {
@@ -79,6 +84,24 @@ namespace Taeyang
 
         private void FixedUpdate()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen)
+            { body.linearVelocity = Vector2.zero; return; }
+            if (approachPlayer)
+            {
+                if (player == null) FindPlayer();
+                if (player == null) return;
+                if (Integration.BattleArena.PlayerBounds(Camera.main, 1).Contains(body.position)) enteredArena = true;
+                Vector2 towardPlayer = (Vector2)player.position - body.position;
+                float stoppingDistance = kind == EnemyKind.Heavy ? 3.8f : kind == EnemyKind.Interceptor ? 2.5f : 3f;
+                // Always enter the visible area before holding range, even when the player
+                // waits against an edge. Do not leave an off-screen ship parked and firing.
+                float remaining = towardPlayer.magnitude - (enteredArena ? stoppingDistance : 0);
+                Vector2 destination = remaining > 0
+                    ? body.position + towardPlayer.normalized * Mathf.Min(remaining, moveSpeed * Time.fixedDeltaTime)
+                    : body.position;
+                body.MovePosition(ApplyKnockback(destination));
+                return;
+            }
             float y = body.position.y;
             float newY = y > settledY ? Mathf.MoveTowards(y, settledY, moveSpeed * Time.fixedDeltaTime) : y;
             float wave = Mathf.Sin(age * frequency) * driftWidth;
@@ -87,7 +110,84 @@ namespace Taeyang
                 x += Mathf.Sin(age * 3.5f) * 0.45f;
             if (kind == EnemyKind.Bomber && player != null)
                 x = Mathf.MoveTowards(body.position.x, player.position.x, moveSpeed * 0.25f * Time.fixedDeltaTime);
-            body.MovePosition(new Vector2(x, newY));
+            body.MovePosition(ApplyKnockback(new Vector2(x, newY)));
+        }
+
+        public void PushBack(Vector2 impulse)
+        {
+            knockback = Vector2.ClampMagnitude(knockback + impulse, 10);
+            // A contact with the player occurs inside the arena; retain that fact
+            // so knockback cannot leave an integrated enemy permanently outside.
+            if (approachPlayer) enteredArena = true;
+        }
+
+        Vector2 ApplyKnockback(Vector2 destination)
+        {
+            destination += knockback * Time.fixedDeltaTime;
+            knockback = Vector2.MoveTowards(knockback, Vector2.zero, 12 * Time.fixedDeltaTime);
+            if (approachPlayer && enteredArena)
+            {
+                var bounds = Integration.BattleArena.PlayerBounds(Camera.main, .65f);
+                destination.x = Mathf.Clamp(destination.x, bounds.xMin, bounds.xMax);
+                destination.y = Mathf.Clamp(destination.y, bounds.yMin, bounds.yMax);
+            }
+            return destination;
+        }
+
+        void OnTriggerEnter2D(Collider2D other) => ContactPlayer(other);
+        void OnTriggerStay2D(Collider2D other) => ContactPlayer(other);
+
+
+        void ContactPlayer(Collider2D other)
+        {
+            var game = Integration.IntegratedGame.Active;
+
+            if (IsDefeated ||
+                game == null ||
+                !game.Running ||
+                Time.time < nextPlayerContact ||
+                GetComponentInParent<Integration.IntegratedBossTarget>() != null)
+            {
+                return;
+            }
+
+            var combat = other.GetComponentInParent<Integration.IntegratedCombat>();
+
+            if (combat == null) return;
+
+            nextPlayerContact = Time.time + 0.8f;
+
+            Vector2 direction =
+                (Vector2)(transform.position - combat.transform.position);
+
+            if (direction.sqrMagnitude < 0.01f)
+            {
+                direction = Vector2.up;
+            }
+
+            direction.Normalize();
+
+            // 플레이어만 뒤로 튕김 (넉백 8)
+            if (combat.movement != null)
+            {
+                combat.movement.AddKnockback(-direction * 8f);
+            }
+
+            // 적에게만 데미지 적용
+            TakeDamage(combat.RamDamage, direction);
+        }
+
+
+
+        private void FindPlayer()
+        {
+            if (approachPlayer && Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.player != null)
+                player = Integration.IntegratedGame.Active.player.transform;
+            else
+            {
+                GameObject candidate = GameObject.FindGameObjectWithTag("Player");
+                if (candidate != null) player = candidate.transform;
+            }
         }
 
         private void FirePattern()
@@ -120,7 +220,7 @@ namespace Taeyang
                 }
                 else
                 {
-                    if(stageDifficulty >= 2 && kind == EnemyKind.Heavy) Shoot(homingProjectile, origin, aim, true);
+                    if (stageDifficulty >= 2 && kind == EnemyKind.Heavy) Shoot(homingProjectile, origin, aim, true);
                     int spread = kind == EnemyKind.Heavy ? 2 : kind == EnemyKind.Fighter ? 1 : 0;
                     for (int i = -spread; i <= spread; i++)
                         Shoot(straightProjectile, origin, Rotate(aim, i * 16f), false);
@@ -180,6 +280,6 @@ namespace Taeyang
             Destroy(gameObject);
         }
 
-        public void ResetHealthForTesting() => CurrentHealth = maxHealth;
+        public void ResetHealthForTesting() { CurrentHealth = maxHealth; IsDefeated = false; }
     }
 }

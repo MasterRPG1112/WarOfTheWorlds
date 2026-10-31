@@ -7,33 +7,34 @@ namespace Jain
 {
     public class Menu : MonoBehaviour
     {
-        [Header("¸Ş´º ¿ÀºêÁ§Æ®")]
+        public bool integrated;
+        [Header("ë©”ë‰´ ì˜¤ë¸Œì íŠ¸")]
         public GameObject basicMenu;
         public GameObject settingMenu;
         public GameObject listMenu;
         public GameObject startInvokeMenu;
 
-        [Header("ÆäÀÌµå ¼³Á¤")]
-        public float fadeDuration = 0.5f; // ÆäÀÌµå ÀüÈ¯ ½Ã°£ (ÃÊ)
+        [Header("í˜ì´ë“œ ì„¤ì •")]
+        public float fadeDuration = 0.5f; // í˜ì´ë“œ ì „í™˜ ì‹œê°„ (ì´ˆ)
 
-        // ³»ºÎ¿¡¼­ ÀÚµ¿À¸·Î °¡Á®¿Ã CanvasGroup º¯¼ö
+        // ë‚´ë¶€ì—ì„œ ìë™ìœ¼ë¡œ ê°€ì ¸ì˜¬ CanvasGroup ë³€ìˆ˜
         private CanvasGroup basicGroup;
         private CanvasGroup settingGroup;
         private CanvasGroup listGroup;
         private CanvasGroup startInvokeGroup;
 
-        //·©Å© º¯¼ö
+        //ë­í¬ ë³€ìˆ˜
         public Text[] rankTexts;
 
         void Start()
         {
-            // °¢ GameObject¿¡ ºÙ¾îÀÖ´Â CanvasGroupÀ» ÀÚµ¿À¸·Î °¡Á®¿È
+            // ê° GameObjectì— ë¶™ì–´ìˆëŠ” CanvasGroupì„ ìë™ìœ¼ë¡œ ê°€ì ¸ì˜´
             basicGroup = basicMenu != null ? basicMenu.GetComponent<CanvasGroup>() : null;
             settingGroup = settingMenu != null ? settingMenu.GetComponent<CanvasGroup>() : null;
             listGroup = listMenu != null ? listMenu.GetComponent<CanvasGroup>() : null;
             startInvokeGroup = startInvokeMenu != null ? startInvokeMenu.GetComponent<CanvasGroup>() : null;
 
-            // °ÔÀÓ ½ÃÀÛ ½Ã ±âº» ¸Ş´º´Â ÄÑ°í, ¼³Á¤ ¸Ş´º´Â ²ô±â ÃÊ±âÈ­
+            // ê²Œì„ ì‹œì‘ ì‹œ ê¸°ë³¸ ë©”ë‰´ëŠ” ì¼œê³ , ì„¤ì • ë©”ë‰´ëŠ” ë„ê¸° ì´ˆê¸°í™”
             SetMenuState(basicMenu, basicGroup, true, 1f);
             SetMenuState(settingMenu, settingGroup, false, 0f);
             SetMenuState(listMenu, listGroup, false, 0f);
@@ -46,14 +47,14 @@ namespace Jain
             StartCoroutine(SwitchMenuRoutine(basicGroup, startInvokeGroup, basicMenu, startInvokeMenu));
         }
 
-        // ¼³Á¤ ¹öÆ° Å¬¸¯ ½Ã: ±âº» ¸Ş´º -> ¼³Á¤ ¸Ş´º·Î ÆäÀÌµå ÀüÈ¯
+        // ì„¤ì • ë²„íŠ¼ í´ë¦­ ì‹œ: ê¸°ë³¸ ë©”ë‰´ -> ì„¤ì • ë©”ë‰´ë¡œ í˜ì´ë“œ ì „í™˜
         public void SettingBtn()
         {
             StopAllCoroutines();
             StartCoroutine(SwitchMenuRoutine(basicGroup, settingGroup, basicMenu, settingMenu));
         }
 
-        // µÚ·Î °¡±â ¹öÆ° Å¬¸¯ ½Ã: ¼³Á¤ ¸Ş´º -> ±âº» ¸Ş´º·Î ÆäÀÌµå ÀüÈ¯
+        // ë’¤ë¡œ ê°€ê¸° ë²„íŠ¼ í´ë¦­ ì‹œ: ì„¤ì • ë©”ë‰´ -> ê¸°ë³¸ ë©”ë‰´ë¡œ í˜ì´ë“œ ì „í™˜
         public void BackBtn1()
         {
             StopAllCoroutines();
@@ -86,6 +87,7 @@ namespace Jain
 
         public void ReStartBtn()
         {
+            if (integrated) { GetComponent<Integration.IntegratedMenu>().NewGame(); return; }
             GameDataManager.instance.dataReset = 1;
             GameDataManager.instance.SaveData();
             SceneManager.LoadScene("Stage1");
@@ -93,6 +95,7 @@ namespace Jain
 
         public void ContinueBtn()
         {
+            if (integrated) { GetComponent<Integration.IntegratedMenu>().ContinueGame(); return; }
             GameDataManager.instance.dataReset = 0;
             GameDataManager.instance.SaveData();
             SceneManager.LoadScene("Stage1");
@@ -100,9 +103,9 @@ namespace Jain
 
         void OpenRank()
         {
-            var rankList = GameDataManager.instance.rank;
+            var rankList = integrated ? Integration.IntegrationSaveStore.Data.ranks : GameDataManager.instance.rank;
 
-            // 1. ¿ì¼± ¸ğµç ÅØ½ºÆ® Ä­À» ÃÊ±âÈ­ (µ¥ÀÌÅÍ°¡ ºÎÁ·ÇÒ ¶§ ºóÄ­À¸·Î ºñ¿ì±â À§ÇÔ)
+            // 1. ìš°ì„  ëª¨ë“  í…ìŠ¤íŠ¸ ì¹¸ì„ ì´ˆê¸°í™” (ë°ì´í„°ê°€ ë¶€ì¡±í•  ë•Œ ë¹ˆì¹¸ìœ¼ë¡œ ë¹„ìš°ê¸° ìœ„í•¨)
             for (int i = 0; i < rankTexts.Length; i++)
             {
                 if (rankTexts[i] != null)
@@ -111,10 +114,10 @@ namespace Jain
                 }
             }
 
-            // 2. µ¥ÀÌÅÍ°¡ ¾ø´Ù¸é Á¾·á
+            // 2. ë°ì´í„°ê°€ ì—†ë‹¤ë©´ ì¢…ë£Œ
             if (rankList == null || rankList.Count == 0) return;
 
-            // 3. ½ÇÁ¦ µ¥ÀÌÅÍ°¡ ÀÖ´Â ¸¸Å­ (ÃÖ´ë 10°³) ÅØ½ºÆ®¿¡ ´ëÀÔ
+            // 3. ì‹¤ì œ ë°ì´í„°ê°€ ìˆëŠ” ë§Œí¼ (ìµœëŒ€ 10ê°œ) í…ìŠ¤íŠ¸ì— ëŒ€ì…
             int count = Mathf.Min(rankList.Count, rankTexts.Length);
 
             for (int i = 0; i < count; i++)
@@ -123,33 +126,33 @@ namespace Jain
                 {
                     var rankData = rankList[i];
 
-                    // Çü½Ä: [¼øÀ§]. [ÀÌ¸§] - [Á¡¼ö]Á¡
-                    rankTexts[i].text = (i + 1) + ". " + rankData.playerName + " - " + rankData.stageScore + "Á¡";
+                    // í˜•ì‹: [ìˆœìœ„]. [ì´ë¦„] - [ì ìˆ˜]ì 
+                    rankTexts[i].text = (i + 1) + ". " + rankData.playerName + " - " + rankData.stageScore + "ì ";
                 }
             }
         }
 
-        // ºÎµå·´°Ô ÆäÀÌµå µÇ¸é¼­ µÎ ¸Ş´º¸¦ »óÈ£ ±³Ã¼ÇÏ´Â ÄÚ·çÆ¾
+        // ë¶€ë“œëŸ½ê²Œ í˜ì´ë“œ ë˜ë©´ì„œ ë‘ ë©”ë‰´ë¥¼ ìƒí˜¸ êµì²´í•˜ëŠ” ì½”ë£¨í‹´
         private IEnumerator SwitchMenuRoutine(CanvasGroup fadeOutGroup, CanvasGroup fadeInGroup, GameObject outObj, GameObject inObj)
         {
             if (fadeInGroup == null || fadeOutGroup == null) yield break;
 
-            // »õ·Î ÄÑÁú ¸Ş´º ÁØºñ
+            // ìƒˆë¡œ ì¼œì§ˆ ë©”ë‰´ ì¤€ë¹„
             inObj.SetActive(true);
             fadeInGroup.alpha = 0f;
             fadeInGroup.interactable = false;
             fadeInGroup.blocksRaycasts = false;
 
-            // ±âÁ¸ ¸Ş´º »óÈ£ÀÛ¿ë Â÷´Ü
+            // ê¸°ì¡´ ë©”ë‰´ ìƒí˜¸ì‘ìš© ì°¨ë‹¨
             fadeOutGroup.interactable = false;
             fadeOutGroup.blocksRaycasts = false;
 
             float elapsed = 0f;
 
-            // ¼­¼­È÷ Åõ¸íµµ°¡ ¹Ù²î´Â ¾Ö´Ï¸ŞÀÌ¼Ç
+            // ì„œì„œíˆ íˆ¬ëª…ë„ê°€ ë°”ë€ŒëŠ” ì• ë‹ˆë©”ì´ì…˜
             while (elapsed < fadeDuration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / fadeDuration);
 
                 fadeOutGroup.alpha = Mathf.Lerp(1f, 0f, t);
@@ -158,7 +161,7 @@ namespace Jain
                 yield return null;
             }
 
-            // ¸¶¹«¸® Á¤¸®
+            // ë§ˆë¬´ë¦¬ ì •ë¦¬
             fadeOutGroup.alpha = 0f;
             outObj.SetActive(false);
 
@@ -167,7 +170,7 @@ namespace Jain
             fadeInGroup.blocksRaycasts = true;
         }
 
-        // ¸Ş´º »óÅÂ¸¦ ÀÏ°ı ¼³Á¤ÇÏ´Â ÇïÆÛ ÇÔ¼ö
+        // ë©”ë‰´ ìƒíƒœë¥¼ ì¼ê´„ ì„¤ì •í•˜ëŠ” í—¬í¼ í•¨ìˆ˜
         private void SetMenuState(GameObject obj, CanvasGroup group, bool isActive, float alpha)
         {
             if (obj != null)

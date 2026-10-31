@@ -6,6 +6,7 @@ namespace Taeyang
         private Vector2 velocity;
         private float age, originX, spin;
         private int stage;
+        private float bottomLimit = -6.5f, lifetime = 12f;
         private Rigidbody2D body;
         public void Initialize(int value)
         {
@@ -18,17 +19,25 @@ namespace Taeyang
             var collider=gameObject.AddComponent<CircleCollider2D>(); collider.radius=.45f; collider.isTrigger=true;
             body=gameObject.AddComponent<Rigidbody2D>(); body.bodyType=RigidbodyType2D.Kinematic; body.useFullKinematicContacts=true;
             velocity=new Vector2(value == 2 ? Random.Range(-.5f,.5f) : 0,-(1.2f+value*.3f)); spin=Random.Range(-50,50);
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.director.perimeterSpawns)
+            {
+                bottomLimit = Integration.BattleArena.ViewBounds().yMin - 2;
+                lifetime = Mathf.Max(lifetime, (transform.position.y - bottomLimit) / Mathf.Abs(velocity.y) + 1);
+            }
         }
         private void FixedUpdate()
         {
+            if (Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen) return;
             age+=Time.fixedDeltaTime;
             float x=stage == 3 ? originX+Mathf.Sin(age*1.8f)*1.2f : body.position.x+velocity.x*Time.fixedDeltaTime;
             body.MovePosition(new Vector2(x,body.position.y+velocity.y*Time.fixedDeltaTime));
             transform.Rotate(0,0,spin*Time.fixedDeltaTime);
-            if(age>12 || body.position.y < -6.5f) Destroy(gameObject);
+            if(age>lifetime || body.position.y < bottomLimit) Destroy(gameObject);
         }
         private void OnTriggerEnter2D(Collider2D other)
         {
+            var combat = other.GetComponentInParent<Integration.IntegratedCombat>();
+            if (combat != null) { combat.Hit(other, 1); Destroy(gameObject); return; }
             var player=other.GetComponent<DemoPlayer>();
             if(player != null) { player.TakeDamage(1); SimpleImpact.Spawn(transform.position,Color.white,.6f); Destroy(gameObject); }
             else if(other.CompareTag("Player")) { other.SendMessage("TakeDamage",1,SendMessageOptions.DontRequireReceiver); Destroy(gameObject); }
