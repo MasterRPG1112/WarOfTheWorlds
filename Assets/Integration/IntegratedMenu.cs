@@ -16,6 +16,7 @@ namespace Integration
         void Awake()
         {
             Time.timeScale = 1;
+            gameObject.AddComponent<OpeningSequence>();
             AudioListener.volume = IntegrationSaveStore.Data.volume;
             if (!Application.isEditor) Screen.fullScreen = IntegrationSaveStore.Data.fullscreen;
         }

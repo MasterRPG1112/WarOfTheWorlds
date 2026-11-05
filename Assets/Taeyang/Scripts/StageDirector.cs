@@ -35,7 +35,7 @@ namespace Taeyang
         private StageBackdrop backdrop;
         public static int PickKind(int stage, int wave, int tick, int member)
         {
-            int[] pool = stage == 1 ? new[]{0,1,3,0,4} : stage == 2 ? new[]{1,2,3,4} : new[]{0,1,2,3,4};
+            int[] pool = stage == 1 ? new[]{0,1,3} : stage == 2 ? new[]{1,2,3,4} : new[]{0,1,2,3,4};
             int count = stage == 1 && wave < 3 ? 3 : pool.Length;
             return pool[(tick + member) % count];
         }
@@ -57,7 +57,7 @@ namespace Taeyang
                 {
                     SpawnFormation(); nextSpawn += SpawnInterval;
                 }
-                if(Elapsed >= nextObstacle && Elapsed < Duration)
+                if(stageNumber >= 2 && Elapsed >= nextObstacle && Elapsed < Duration)
                 { SpawnObstacle(); nextObstacle += stageNumber == 1 ? 7 : stageNumber == 2 ? 6 : 5; }
                 if(Elapsed >= Duration) State = Phase.Clearing;
             }
@@ -68,6 +68,8 @@ namespace Taeyang
                 if (noBossCampaign) { State = Phase.Clear; stageCleared.Invoke(); return; }
                 State = Phase.AwaitingBoss;
                 bossRequested.Invoke();
+                if (CurrentBoss == null && State == Phase.AwaitingBoss && Integration.IntegratedGame.Active != null)
+                    AttachBoss(Integration.CampaignBoss.Create(this));
                 if(CurrentBoss != null && State == Phase.AwaitingBoss) AttachBoss(Instantiate(CurrentBoss,bossPosition,Quaternion.identity));
                 else if (CurrentBoss == null && allowMissingBossTestSkip && State == Phase.AwaitingBoss)
                     SkipMissingBossForTesting();
@@ -98,6 +100,7 @@ namespace Taeyang
         }
         private void SpawnObstacle()
         {
+            if (stageNumber < 2) return;
             var go = new GameObject(stageNumber == 3 ? "Ice meteor" : stageNumber == 2 ? "Drifting wreck" : "Asteroid");
             if (perimeterSpawns)
             {

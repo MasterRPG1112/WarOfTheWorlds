@@ -20,14 +20,14 @@ namespace Integration.Editor
         public const string ScenePath = "Assets/Integration/TaeyangIntegrated.unity";
         public const string MenuPath = "Assets/Integration/MainMenu.unity";
         static Font font;
-        [MenuItem("Tools/WarOfTheWorlds/Build Integrated No Boss Campaign")]
+        [MenuItem("Tools/WarOfTheWorlds/Build Integrated Campaign")]
         public static void Build()
         {
             var scene = EditorSceneManager.OpenScene("Assets/Taeyang/Scenes/TaeyangCampaign1.unity");
             foreach (var p in UnityEngine.Object.FindObjectsByType<DemoPlayer>(FindObjectsSortMode.None)) UnityEngine.Object.DestroyImmediate(p.gameObject);
             foreach (var p in UnityEngine.Object.FindObjectsByType<EnemyDemoHUD>(FindObjectsSortMode.None)) UnityEngine.Object.DestroyImmediate(p);
             var director = UnityEngine.Object.FindFirstObjectByType<StageDirector>();
-            director.noBossCampaign = false; director.allowMissingBossTestSkip = true; director.showDemoHUD = false; director.enabled = false;
+            director.noBossCampaign = false; director.allowMissingBossTestSkip = false; director.showDemoHUD = false; director.enabled = false;
             director.perimeterSpawns = true;
             Camera.main.orthographicSize = BattleArena.HalfHeight;
             director.bossPrefab = null; director.campaignBossPrefabs = new GameObject[3];
@@ -207,7 +207,7 @@ namespace Integration.Editor
         {
             var scene=EditorSceneManager.OpenScene(ScenePath);
             var game=UnityEngine.Object.FindFirstObjectByType<IntegratedGame>();
-            if(game==null || game.player==null || game.score==null || game.shop==null || game.hpUI.Length!=0 || !game.director.allowMissingBossTestSkip) throw new Exception("Integration wiring");
+            if(game==null || game.player==null || game.score==null || game.shop==null || game.hpUI.Length!=0 || game.director.allowMissingBossTestSkip) throw new Exception("Integration wiring");
             if(game.player.bulletPrefab==null || game.player.movement.BHole==null || game.player.movement.GravityUnit==null || game.player.movement.ParryingUnit==null) throw new Exception("Combat prefab references");
             foreach(var root in scene.GetRootGameObjects()) foreach(var t in root.GetComponentsInChildren<Transform>(true))
                 if(GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)>0) throw new Exception("Missing script: "+t.name);

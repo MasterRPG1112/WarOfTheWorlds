@@ -12,6 +12,9 @@ namespace Integration
     {
         public int stage = 1;
         public int coreHp = 8;
+        public int equippedParts;
+        public int bombs;
+        public int guide;
         public int leftHp = 5;
         public int rightHp = 5;
         public int score;
@@ -36,6 +39,7 @@ namespace Integration
         public int version = 2;
         public Checkpoint checkpoint;
         public List<GameDataManager.RankData> ranks = new List<GameDataManager.RankData>();
+        public int[] cheatKeys;
         public float volume = 1;
         public bool fullscreen;
     }
@@ -203,6 +207,8 @@ namespace Integration
                     checkpoint.coreHp = Mathf.Clamp(checkpoint.coreHp, 1, 8);
                     checkpoint.score = Mathf.Max(0, checkpoint.score);
                     checkpoint.money = Mathf.Max(0, checkpoint.money);
+                    checkpoint.equippedParts &= 7;
+                    checkpoint.bombs = Mathf.Clamp(checkpoint.bombs, 0, 9);
                     checkpoint.part1 = Mathf.Max(0, checkpoint.part1);
                     checkpoint.part2 = Mathf.Max(0, checkpoint.part2);
                     checkpoint.part3 = Mathf.Max(0, checkpoint.part3);
@@ -217,7 +223,9 @@ namespace Integration
                         checkpoint.ownedMask = 0;
                         checkpoint.patchSlot0 = checkpoint.patchSlot1 = -1;
                     }
-                    checkpoint.ownedMask &= 15;
+                    checkpoint.guide = Mathf.Max(0, checkpoint.guide);
+                    checkpoint.ownedMask &= 31;
+                    if (checkpoint.guide > 0) checkpoint.ownedMask |= 16;
                     if (checkpoint.pull > 0) checkpoint.ownedMask |= 1;
                     if (checkpoint.slow > 0) checkpoint.ownedMask |= 2;
                     if (checkpoint.reflex > 0) checkpoint.ownedMask |= 4;
@@ -231,6 +239,11 @@ namespace Integration
                     if (checkpoint.patchSlot1 >= 0 && (checkpoint.ownedMask & (1 << checkpoint.patchSlot1)) == 0) checkpoint.patchSlot1 = -1;
                 }
             }
+            if (save.cheatKeys == null || save.cheatKeys.Length != 4) save.cheatKeys = new[] { (int)KeyCode.F1, (int)KeyCode.F2, (int)KeyCode.F3, (int)KeyCode.F4 };
+            var seenKeys = new HashSet<int>();
+            bool validKeys = true;
+            foreach (int key in save.cheatKeys) if (key < (int)KeyCode.F1 || key > (int)KeyCode.F12 || !seenKeys.Add(key)) validKeys = false;
+            if (!validKeys) save.cheatKeys = new[] { (int)KeyCode.F1, (int)KeyCode.F2, (int)KeyCode.F3, (int)KeyCode.F4 };
             save.version = 2;
             save.volume = float.IsNaN(save.volume) || float.IsInfinity(save.volume) ? 1 : Mathf.Clamp01(save.volume);
             if (save.ranks == null) save.ranks = new List<GameDataManager.RankData>();

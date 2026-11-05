@@ -13,6 +13,7 @@ public class ItemSpawner : MonoBehaviour
 
     void Start()
     {
+        if (integratedArena) return; // Integrated drops come from enemy deaths; director owns meteors.
         InvokeRepeating(nameof(SpawnItem), 1f, spawnInterval);
     }
 

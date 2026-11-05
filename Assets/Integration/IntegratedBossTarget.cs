@@ -15,6 +15,7 @@ namespace Integration
         public int CurrentHealth => currentHealth;
         public int MaxHealth => Mathf.Max(1, maxHealth);
         public bool IsDefeated { get; private set; }
+        public virtual bool ContactHazard => true;
         float nextRam;
 
         protected virtual void Awake() => currentHealth = MaxHealth;
@@ -28,18 +29,22 @@ namespace Integration
             if (player == null) return;
             nextRam = Time.time + 1;
             TakeRamDamage(player.RamDamage);
-            player.Hit(GetComponentInChildren<Collider2D>(), 1);
+            if (ContactHazard) player.Hit(GetComponentInChildren<Collider2D>(), 1);
         }
 
         public void TakeRamDamage(int amount)
         {
             if (IsDefeated || amount <= 0) return;
             currentHealth = Mathf.Max(0, currentHealth - amount);
+            OnDamaged();
             if (currentHealth > 0) return;
             IsDefeated = true;
+            OnDefeated();
             defeated.Invoke();
             if (director != null) director.NotifyBossDefeated();
             if (deactivateOnDefeat) gameObject.SetActive(false);
         }
+        protected virtual void OnDamaged() { }
+        protected virtual void OnDefeated() { }
     }
 }

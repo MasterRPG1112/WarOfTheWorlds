@@ -22,7 +22,7 @@ namespace Taeyang
         Rigidbody2D body;
         Collider2D hitbox;
         float speedScale = 1, remaining;
-        bool resolved, curved;
+        bool resolved, curved, forced;
         Vector2 curveStart, curveControl, curveEnd;
         float curveAge, curveDuration;
         readonly Dictionary<Object, float> slows = new Dictionary<Object, float>();
@@ -69,6 +69,8 @@ namespace Taeyang
             RotateToDirection();
         }
 
+        public void ForceTarget(Transform enemy) { if (resolved || enemy == null) return; curved = false; forced = true; target = enemy; rotationSpeed = Mathf.Max(rotationSpeed, 360); }
+
         public void Reflect(Vector2 aim)
         {
             if (resolved || Reflected) return;
@@ -98,7 +100,7 @@ namespace Taeyang
             }
         }
 
-        bool Frozen => Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.EnemiesFrozen;
+        bool Frozen => Integration.IntegratedGame.Active != null && Integration.IntegratedGame.Active.MissilesFrozen;
         void Update()
         {
             if (resolved || Frozen) return;
@@ -160,9 +162,9 @@ namespace Taeyang
             if (other == null || other.transform.IsChildOf(transform) ||
                 other.GetComponentInParent<EnemyProjectile>() != null ||
                 other.GetComponentInParent<Integration.IntegratedBossTarget>() != null) return false;
-            if (!Reflected && owner != null && other.transform.IsChildOf(owner.transform)) return false;
+            if (!forced && !Reflected && owner != null && other.transform.IsChildOf(owner.transform)) return false;
             var enemy = other.GetComponentInParent<EnemyShip>();
-            if (enemy != null) return (Reflected || enemy != owner) && !enemy.IsDefeated;
+            if (enemy != null) return (forced || Reflected || enemy != owner) && !enemy.IsDefeated;
             if (Reflected) return false;
             return other.GetComponentInParent<Integration.IntegratedCombat>() != null || other.CompareTag("Player");
         }

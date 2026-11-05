@@ -3364,7 +3364,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   noBossCampaign: 0
-  allowMissingBossTestSkip: 1
+  allowMissingBossTestSkip: 0
   perimeterSpawns: 1
   showDemoHUD: 0
 --- !u!4 &1060268911
