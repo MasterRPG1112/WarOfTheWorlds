@@ -85,7 +85,7 @@ namespace Taeyang
                 Vector2 position = perimeterSpawns ? Integration.BattleArena.SpawnPosition(LastSpawnDirection,i,members)
                     : new Vector2(center+(i-(members-1)*0.5f)*1.5f,5.8f+i*0.25f);
                 LastSpawnPosition = position;
-                var ship = Instantiate(enemyPrefabs[kind],position,Quaternion.identity);
+                var ship = Instantiate(enemyPrefabs[kind], position, Quaternion.identity * Quaternion.Euler(0f, 0f, 180f));
                 ship.approachPlayer = perimeterSpawns;
                 ship.stageOnePatterns = true;
                 ship.stageDifficulty = stageNumber;
