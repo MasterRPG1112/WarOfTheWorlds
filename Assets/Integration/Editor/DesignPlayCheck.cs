@@ -12,7 +12,7 @@ using O = UnityEngine.Object;
 
 namespace Integration.Editor
 {
-    // Optional user-run Play Mode regression. Codex does not launch the Unity editor.
+    // Explicit Play Mode regression with isolated save data and accelerated progression.
     [InitializeOnLoad]
     public static class DesignPlayCheck
     {
@@ -258,6 +258,7 @@ namespace Integration.Editor
             // Exercise the real shop/intermission API, then round-trip stage-start snapshots.
             State(game.director, StageDirector.Phase.Clear);
             typeof(IntegratedGame).GetMethod("BeginIntermission", Private).Invoke(game, null);
+            A(game.shop.shopMenu.activeInHierarchy, "Intermission activates the existing shop hierarchy");
             game.shop.coin = 2000; int blackStock = player.PatchCount(0);
             A(game.shop.TryBuySkill(0) && game.shop.coin == 1400 && player.PatchCount(0) == blackStock + 1, "Existing skill purchase deducts its price once");
             game.shop.part2 = 0; game.shop.partLicense = 1;
@@ -314,7 +315,7 @@ namespace Integration.Editor
             A(game.SubmitVictory("Regression") && !game.SubmitVictory("Duplicate"), "Victory score submits exactly once after ID entry");
             IntegrationSaveStore.Reload();
             A(IntegrationSaveStore.Data.ranks.Count > 0 && IntegrationSaveStore.Data.ranks.Count <= 5 && IntegrationSaveStore.Data.ranks[0].playerName == "Regression", "Victory ranking persists in isolated save and keeps top five");
-            report += "LIMIT: user-run Play Mode source; accelerated campaign supplies invulnerability and player placement. No human input, visual, audio or dodgeability review is implied.\n";
+            report += "LIMIT: accelerated campaign supplies invulnerability and player placement. No human input, visual, audio or dodgeability review is implied.\n";
         }
     }
 }

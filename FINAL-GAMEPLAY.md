@@ -1,5 +1,7 @@
 # WarOfTheWorlds 최종 게임 기능 연결
 
+최신 실행 검증: 사용자가 이후 Unity 직접 실행을 허용해 Windows 실행본과 Play Mode 회귀 검사를 수행했다. 결과와 남은 종료 오류는 `WINDOWS-PLAY.md`를 참조한다. 아래 Unity 미실행 표기는 최초 전달 시점의 기록이다.
+
 작성일: 2026-11-05. 기준: `main` / `5327764858af3b54aa2ea59533ae9a0adecc4a37`.
 작업 브랜치: `feature/final-gameplay-20261105`.
 

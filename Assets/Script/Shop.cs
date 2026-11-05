@@ -35,6 +35,15 @@ namespace Jain
         void Start() { Initialize(); }
         public void Initialize()
         {
+            var campaign = Integration.IntegratedGame.Active;
+            if (campaign != null && campaign.shop == this)
+            {
+                // The team's scene stores the Menu host inactive. Activating only
+                // its ShopMenu child cannot display the shop or enable purchases.
+                // Keep the original hierarchy and artwork, with its panel hidden.
+                if (shopMenu != null) shopMenu.SetActive(false);
+                gameObject.SetActive(true);
+            }
             var manager = GameDataManager.instance;
             if (manager != null)
             {
