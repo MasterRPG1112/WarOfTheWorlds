@@ -5,11 +5,13 @@ namespace Integration
 {
     public class CampaignCheats : MonoBehaviour
     {
+        public static bool ResumeAfterChapterSkip;
         [Tooltip("Development builds only. Default off; use a separate practice run.")]
         public bool enableDevelopmentCheats;
         public KeyCode toggleKey = KeyCode.F12;
         public KeyCode debugKey = KeyCode.F1, invulnerableKey = KeyCode.F2,
             defeatEnemiesKey = KeyCode.F3, moneyKey = KeyCode.F4;
+        public KeyCode advanceTimeKey = KeyCode.F5, nextStageKey = KeyCode.F6;
         [Min(1)] public int moneyAmount = 1000;
         public bool ShowColliders { get; private set; }
         public bool CheatModeAvailable
@@ -24,16 +26,27 @@ namespace Integration
             }
         }
         public bool Allowed => CheatModeAvailable && enableDevelopmentCheats;
+        void Start()
+        {
+            bool resume = ResumeAfterChapterSkip;
+            ResumeAfterChapterSkip = false;
+            if (!resume || !CheatModeAvailable) return;
+            enableDevelopmentCheats = true;
+            var game = IntegratedGame.Active;
+            if (game != null && game.RankedRun) game.MarkPracticeRun();
+        }
         void OnValidate() => ValidateToggleKey();
         void ValidateToggleKey()
         {
             if (IsFunctionKey(toggleKey) && toggleKey != debugKey && toggleKey != invulnerableKey &&
-                toggleKey != defeatEnemiesKey && toggleKey != moneyKey) return;
+                toggleKey != defeatEnemiesKey && toggleKey != moneyKey &&
+                toggleKey != advanceTimeKey && toggleKey != nextStageKey) return;
             // Reserve a distinct function key so toggling cannot also grant an action.
             for (int value = (int)KeyCode.F12; value >= (int)KeyCode.F1; value--)
             {
                 var candidate = (KeyCode)value;
-                if (candidate == debugKey || candidate == invulnerableKey || candidate == defeatEnemiesKey || candidate == moneyKey) continue;
+                if (candidate == debugKey || candidate == invulnerableKey || candidate == defeatEnemiesKey ||
+                    candidate == moneyKey || candidate == advanceTimeKey || candidate == nextStageKey) continue;
                 toggleKey = candidate;
                 return;
             }
@@ -74,11 +87,13 @@ namespace Integration
             if (Pressed(invulnerableKey)) ExecuteCheat(1);
             if (Pressed(defeatEnemiesKey)) ExecuteCheat(2);
             if (Pressed(moneyKey)) ExecuteCheat(3);
+            if (Pressed(advanceTimeKey)) ExecuteCheat(4);
+            if (Pressed(nextStageKey)) ExecuteCheat(5);
         }
         public bool ExecuteCheat(int action)
         {
             var game = IntegratedGame.Active;
-            if (!Allowed || game == null || !game.HasStarted || game.Ended || game.player == null || action < 0 || action > 3) return false;
+            if (!Allowed || game == null || !game.HasStarted || game.Ended || game.player == null || action < 0 || action > 5) return false;
             // Currency and toggles remain available while paused or shopping.
             // Enemy defeat stays in running play so its ordinary reward path runs.
             if (action == 2 && !game.Running) return false;
@@ -99,6 +114,8 @@ namespace Integration
                 game.shop.SyncLegacyData(false);
                 if (game.shop.coinUI != null) game.shop.coinUI.text = "남은 돈 : " + game.shop.coin + "벨";
             }
+            else if (action == 4) return game.AdvanceSurvivalForTesting(60);
+            else if (action == 5) return game.SkipToNextStageForTesting();
             return true;
         }
         void ClearActiveCheats(IntegratedGame game)
@@ -114,8 +131,9 @@ namespace Integration
             var game = IntegratedGame.Active;
             if (!CheatModeAvailable || game == null) return;
             GUI.color = Allowed ? Color.yellow : Color.white;
-            GUI.Label(new Rect(12, Screen.height - 48, 700, 30), toggleKey + " 테스트 치트: " +
-                (Allowed ? "끄기 · 랭킹 제외 | " + debugKey + " 충돌 · " + invulnerableKey + " 무적 · " + defeatEnemiesKey + " 적 제거 · " + moneyKey + " +" + moneyAmount : "켜기 (기본 OFF · 활성화 시 랭킹 제외)"));
+            GUI.Label(new Rect(12, Screen.height - 58, Mathf.Max(1, Screen.width - 24), 40), toggleKey + " 테스트 치트: " +
+                (Allowed ? "끄기 · 랭킹 제외 | " + debugKey + " 충돌 · " + invulnerableKey + " 무적 · " + defeatEnemiesKey + " 적 제거 · " + moneyKey + " +" + moneyAmount : "켜기 (기본 OFF · 활성화 시 랭킹 제외)") +
+                "\n" + advanceTimeKey + " 생존 +60초 · " + nextStageKey + " 다음 챕터 (1→2→3)" + (Allowed ? "" : " (치트를 켠 후 사용)"));
             if (Allowed && ShowColliders && Camera.main != null)
             {
                 foreach (var enemy in FindObjectsByType<EnemyShip>(FindObjectsSortMode.None)) DrawColliders(enemy.gameObject);

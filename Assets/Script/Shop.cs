@@ -18,7 +18,7 @@ namespace Jain
         public int EquippedPartsMask => equippedPartsMask < 0 ? OwnedPartsMask : equippedPartsMask & OwnedPartsMask & 7;
         static readonly string[] PartNames = { "비상 동력원", "터보 엔진", "방호 철갑탄" };
 
-        //스테이지 클리어 시 파츠 구매 권한
+        // Legacy serialized field; no longer restricts or counts part purchases.
         public int partLicense;
 
         //특수 아이템 소유 여부
@@ -162,7 +162,7 @@ namespace Jain
 
         public bool TryBuyPart(int kind)
         {
-            if (!CanPurchase || partLicense != 1 || kind < 0 || kind > 2) return false;
+            if (!CanPurchase || kind < 0 || kind > 2) return false;
             int owned = kind == 0 ? part1 : kind == 1 ? part2 : part3;
             int cost = Mathf.Max(0, partCost);
             if (owned > 0 || coin < cost) return false;
@@ -172,8 +172,6 @@ namespace Jain
             else if (kind == 1) part2 = 1;
             else part3 = 1;
             equippedPartsMask = equipped | (1 << kind);
-            // Preserve the existing one-part purchase allowance per cleared stage.
-            partLicense = 0;
             SyncLegacyData(true);
             RefreshPartEffects();
             ReloadUI();
@@ -198,6 +196,62 @@ namespace Jain
 
         public void RefreshUI() => ReloadUI();
 
+        public string PartDescription(int kind)
+        {
+            var campaign = Integration.IntegratedGame.Active;
+            var player = campaign != null && campaign.shop == this ? campaign.player : null;
+            if (kind == 0)
+                return "치명타 1회 생존 → HP " + Mathf.Clamp(player != null ? player.emergencyHealth : 4, 1, 8) +
+                    "\n발동 시 파츠 소모";
+            if (kind == 1)
+            {
+                float speed = player != null ? player.baseMoveSpeed : 5;
+                float bonus = player != null ? player.turboSpeedBonus : 2;
+                return "이동 속도 " + speed.ToString("0.#") + " → " + (speed + bonus).ToString("0.#") +
+                    "\n속도 +" + (speed > 0 ? (bonus / speed * 100).ToString("0.#") + "%" : bonus.ToString("0.#"));
+            }
+            if (kind == 2)
+            {
+                int damage = player != null ? player.baseRamDamage : 20;
+                int bonus = player != null ? player.armorRamBonus : 10;
+                return "보스 몸통박치기 " + damage + " → " + (damage + bonus) +
+                    "\n피해 +" + (damage > 0 ? (bonus * 100f / damage).ToString("0.#") + "%" : bonus.ToString());
+            }
+            return "";
+        }
+
+        void ShowPartDescription(Button button, Text originalLabel, int kind)
+        {
+            if (originalLabel == null) return;
+            // The existing buttons, label and artwork keep their original geometry.
+            // These captions occupy the empty gaps beneath the three part controls.
+            const string captionName = "Part effect description";
+            var existing = button.transform.Find(captionName);
+            Text caption;
+            if (existing != null) caption = existing.GetComponent<Text>();
+            else
+            {
+                var go = new GameObject(captionName, typeof(RectTransform), typeof(Text));
+                go.transform.SetParent(button.transform, false);
+                caption = go.GetComponent<Text>();
+                var rect = go.GetComponent<RectTransform>();
+                rect.anchorMin = rect.anchorMax = new Vector2(.5f, 0);
+                rect.pivot = new Vector2(.5f, 1);
+                rect.anchoredPosition = new Vector2(0, -5);
+                rect.sizeDelta = new Vector2(430, 48);
+                caption.font = originalLabel.font;
+                caption.fontStyle = originalLabel.fontStyle;
+                caption.fontSize = Mathf.Clamp(originalLabel.fontSize - 7, 16, 20);
+                caption.color = originalLabel.color;
+                caption.alignment = TextAnchor.UpperCenter;
+                caption.horizontalOverflow = HorizontalWrapMode.Wrap;
+                caption.verticalOverflow = VerticalWrapMode.Overflow;
+                caption.supportRichText = false;
+                caption.raycastTarget = false;
+            }
+            if (caption != null) caption.text = PartDescription(kind);
+        }
+
         void ReloadUI()
         {
             if (coinUI != null) coinUI.text = "남은 돈 : " + coin + "벨";
@@ -214,6 +268,7 @@ namespace Jain
                     var label = button.GetComponentInChildren<Text>(true);
                     if (label != null) label.text = PartNames[kind] + "\n" +
                         ((OwnedPartsMask & (1 << kind)) == 0 ? Mathf.Max(0, partCost) + "벨 구매" : IsPartEquipped(kind) ? "장착 중 · 해제" : "미장착 · 장착");
+                    ShowPartDescription(button, label, kind);
                     break;
                 }
         }

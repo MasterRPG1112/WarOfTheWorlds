@@ -179,11 +179,17 @@ namespace Integration.Editor
             int beforeMoney = game.shop.coin;
             A(cheats.ExecuteCheat(3) && game.shop.coin == beforeMoney + cheats.moneyAmount, "Money cheat works inside the paused shop");
             A(!cheats.ExecuteCheat(2), "Defeat-enemies cheat cannot bypass paused reward rules");
-            game.shop.coin = 2000;
+            game.shop.coin = 4000;
             A(game.shop.TryBuyPart(1) && game.shop.IsPartEquipped(1) && player.movement.speed == 7, "Pause-shop purchase immediately equips and applies turbo");
             A(game.shop.TogglePart(1) && game.shop.part2 == 1 && player.movement.speed == 5, "Pause-shop unequip removes turbo without losing ownership");
+            game.shop.partLicense = 0;
+            A(game.shop.TryBuyPart(0) && game.shop.TryBuyPart(2) && game.shop.OwnedPartsMask == 7 && game.shop.coin == 1000,
+                "All three unique parts can be purchased in one shop with exact total cost");
+            A(!game.shop.TryBuyPart(2) && game.shop.coin == 1000, "Already owned part cannot be charged again");
+            float elapsedBeforeSkip = game.director.Elapsed;
+            A(cheats.ExecuteCheat(4) && Mathf.Abs(game.director.Elapsed - elapsedBeforeSkip - 60) < .01f, "Time cheat advances survival by sixty seconds while shopping");
             A(!cheats.ToggleDevelopmentMode() && !game.RankedRun && IntegrationSaveStore.Data.checkpoint.practice, "Disabling cheats cannot restore ranking eligibility");
-            game.shop.part2 = 0; game.shop.equippedPartsMask = 0; game.shop.coin = 0;
+            game.shop.part1 = game.shop.part2 = game.shop.part3 = 0; game.shop.equippedPartsMask = 0; game.shop.coin = 0;
             game.CloseShop(); A(game.pausePanel.activeInHierarchy && !game.Running, "Closing pause shop returns to pause controls");
             game.TogglePause(); A(game.Running, "Pause shop returns to gameplay");
             for (int kind = 0; kind < 4; kind++) A(!player.TryUsePatch(kind), "Zero-stock skill blocked " + kind);
@@ -211,6 +217,7 @@ namespace Integration.Editor
             }
 
             var drops = player.GetComponent<CampaignDrops>();
+            A(typeof(PatchPickup).GetMethod("OnGUI", Private) == null, "Drop pickups have no floating letter or number labels");
             float[] weights = drops.weights;
             drops.weights = new float[7]; A(drops.ChooseKind(.5f) == -1, "Empty weighted drop table creates no item");
             drops.weights[6] = 1; A(drops.ChooseKind(0) == 6 && drops.ChooseKind(1) == 6, "Weighted selection includes both normalized boundaries");

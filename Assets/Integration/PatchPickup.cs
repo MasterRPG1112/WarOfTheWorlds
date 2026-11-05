@@ -43,12 +43,5 @@ namespace Integration
             Destroy(gameObject);
             return true;
         }
-        void OnGUI()
-        {
-            if (Camera.main == null) return;
-            Vector3 p=Camera.main.WorldToScreenPoint(transform.position);
-            if (kind < 0 || kind > 6 || p.z < 0) return;
-            GUI.Label(new Rect(p.x-42,Screen.height-p.y-38,130,24),new[]{"B +1","V +1","R +1","T +1","REPAIR","INVINCIBLE","SHIELD"}[kind]);
-        }
     }
 }

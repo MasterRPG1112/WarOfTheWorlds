@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Text;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -89,6 +90,32 @@ namespace Integration
             yield return new WaitForSecondsRealtime(1);
             Check(game.Running && game.director.stageNumber == 1 && game.player.Health == 8, "Skipping starts stage1 with HP8");
             Capture("03-stage1");
+            var drops = game.player.GetComponent<CampaignDrops>();
+            for (int kind = 0; kind < 7; kind++)
+            {
+                var pickup = drops.SpawnPickup(kind, new Vector3(kind - 3, 0, 0));
+                var prefab = drops.pickupPrefabs[kind];
+                if (prefab != null)
+                {
+                    Vector3 expected = prefab.transform.localScale * drops.visualSizeMultiplier;
+                    Check(pickup.transform.localScale.magnitude <= expected.magnitude + .001f &&
+                        Vector3.Cross(pickup.transform.localScale, expected).sqrMagnitude < .0001f,
+                        "Pickup art shrinks without changing its aspect " + kind);
+                }
+                bool hasBounds = false; Bounds bounds = new Bounds();
+                foreach (var visual in pickup.GetComponentsInChildren<SpriteRenderer>(true))
+                {
+                    if (visual.sprite == null) continue;
+                    if (!hasBounds) { bounds = visual.bounds; hasBounds = true; } else bounds.Encapsulate(visual.bounds);
+                }
+                Check(hasBounds && Mathf.Max(bounds.size.x, bounds.size.y) <= drops.maxVisualWorldSize + .001f,
+                    "Pickup stays within the small world-size limit " + kind);
+            }
+            Check(typeof(PatchPickup).GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public) == null,
+                "Pickup floating letter and number labels are removed");
+            yield return null;
+            Capture("03b-smaller-pickups");
+            drops.ClearPickups();
             var hud = FindFirstObjectByType<DesignHud>();
             Check(hud != null, "Existing HUD connected");
             hud.OpenPatches();
@@ -112,7 +139,7 @@ namespace Integration
             Check(game.ShopAccessible && !game.BetweenStages && game.shop.shopMenu.activeInHierarchy && !game.Running,
                 "Shop is accessible from pause in stage1");
             Capture("07-shop");
-            game.shop.coin = 2000;
+            game.shop.coin = 4000;
             game.shop.RefreshUI();
             ClickPart(game, "SpeedBtn");
             Check(game.shop.IsPartEquipped(1) && game.player.movement.speed == 7,
@@ -122,6 +149,14 @@ namespace Integration
             Check(game.shop.part2 == 1 && !game.shop.IsPartEquipped(1) && game.player.movement.speed == 5,
                 "Owned part can be unequipped and effect removed");
             Capture("09-part-unequipped");
+            game.shop.partLicense = 0;
+            ClickPart(game, "LifeBtn"); ClickPart(game, "HpBtn");
+            Check(game.shop.OwnedPartsMask == 7 && game.shop.EquippedPartsMask == 5 && game.shop.coin == 1000,
+                "All three parts can be bought in one visit with exact costs and independent equipment");
+            Check(!game.shop.TryBuyPart(0) && game.shop.coin == 1000, "Duplicate ownership does not spend money");
+            Check(!string.IsNullOrEmpty(game.shop.PartDescription(0)) && !string.IsNullOrEmpty(game.shop.PartDescription(1)) &&
+                !string.IsNullOrEmpty(game.shop.PartDescription(2)), "Every part exposes its actual effect description");
+            Capture("10-all-parts-and-effects");
             var cheats = game.GetComponent<CampaignCheats>();
             Check(!cheats.Allowed, "Cheats default disabled");
             if (cheats.CheatModeAvailable)
@@ -129,10 +164,26 @@ namespace Integration
                 Check(cheats.ToggleDevelopmentMode(), "Development mode can be enabled");
                 int coins = game.shop.coin;
                 Check(cheats.ExecuteCheat(3) && game.shop.coin == coins + cheats.moneyAmount, "Development money cheat works in pause shop");
+                float elapsed = game.director.Elapsed;
+                Check(cheats.ExecuteCheat(4) && Mathf.Abs(game.director.Elapsed - elapsed - 60) < .01f,
+                    "Time cheat advances sixty seconds without waiting");
+                int owned = game.shop.OwnedPartsMask, equipped = game.shop.EquippedPartsMask, money = game.shop.coin;
+                Check(cheats.ExecuteCheat(5), "Next chapter cheat accepts stage1");
+                yield return new WaitForSecondsRealtime(1);
+                game = IntegratedGame.Active; cheats = game.GetComponent<CampaignCheats>();
+                Check(game.director.stageNumber == 2 && game.Running && cheats.Allowed && !game.RankedRun && game.shop.coin == money &&
+                    game.shop.OwnedPartsMask == owned && game.shop.EquippedPartsMask == equipped,
+                    "Chapter skip starts stage2 preserving money, parts, equipment and practice mode");
+                Check(cheats.ExecuteCheat(5), "Next chapter cheat accepts stage2");
+                yield return new WaitForSecondsRealtime(1);
+                game = IntegratedGame.Active; cheats = game.GetComponent<CampaignCheats>();
+                Check(game.director.stageNumber == 3 && cheats.Allowed && !cheats.ExecuteCheat(5) && !game.Ended,
+                    "Final chapter skip cannot create a victory or bypass the ending boss");
+                Capture("11-cheat-chapter3");
                 Check(!cheats.ToggleDevelopmentMode() && !game.RankedRun, "Practice status survives disabling cheats");
             }
             else Check(!cheats.ToggleDevelopmentMode() && !cheats.ExecuteCheat(3), "Release build rejects cheat activation");
-            game.CloseShop();
+            game.OpenShop(); game.CloseShop();
             Check(game.pausePanel.activeInHierarchy && !game.Running, "Shop back returns to pause controls");
             game.BackToMenu();
             yield return new WaitForSecondsRealtime(1);

@@ -17,6 +17,10 @@ namespace Integration
         [Min(0)] public float invulnerabilityDuration = 3;
         [Min(1)] public int healAmount = 2;
         [Min(1)] public int stockPerPickup = 1;
+        [Tooltip("Scales pickup artwork once; collection and attraction distances stay in world units.")]
+        [Range(.1f, 2f)] public float visualSizeMultiplier = .7f;
+        [Tooltip("Maximum combined sprite width/height in world units; oversized team icons shrink uniformly.")]
+        [Min(.1f)] public float maxVisualWorldSize = .65f;
 
         void OnEnable() => EnemyShip.DestroyedByPlayer += OnEnemyDestroyed;
         void OnDisable() => EnemyShip.DestroyedByPlayer -= OnEnemyDestroyed;
@@ -108,6 +112,21 @@ namespace Integration
                 float size = visual.sprite != null ? Mathf.Max(visual.sprite.bounds.size.x, visual.sprite.bounds.size.y) : 1;
                 item.transform.localScale = Vector3.one * (.65f / Mathf.Max(.01f, size));
             }
+            // Both cached team prefabs and generated fallback icons use one root
+            // multiplier, preserving their artwork aspect and child proportions.
+            item.transform.localScale *= Mathf.Clamp(visualSizeMultiplier, .1f, 2f);
+            Bounds visualBounds = default(Bounds);
+            bool hasVisualBounds = false;
+            foreach (var visual in item.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (visual.sprite == null) continue;
+                if (!hasVisualBounds) { visualBounds = visual.bounds; hasVisualBounds = true; }
+                else visualBounds.Encapsulate(visual.bounds);
+            }
+            float largestSide = Mathf.Max(visualBounds.size.x, visualBounds.size.y);
+            float sizeLimit = Mathf.Max(.1f, maxVisualWorldSize);
+            if (hasVisualBounds && largestSide > sizeLimit)
+                item.transform.localScale *= sizeLimit / largestSide;
             return pickup;
         }
 

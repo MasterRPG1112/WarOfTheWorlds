@@ -104,6 +104,16 @@ namespace Taeyang
             }
             SpawnTicks++;
         }
+        internal bool AdvanceSurvivalClock(float seconds)
+        {
+            if (State != Phase.Survival || seconds <= 0 || float.IsNaN(seconds) || float.IsInfinity(seconds)) return false;
+            Elapsed = Mathf.Min(Duration, Elapsed + seconds);
+            // Skip missed formations rather than creating a catch-up enemy flood.
+            nextSpawn = (Mathf.Floor(Elapsed / SpawnInterval) + 1) * SpawnInterval;
+            nextObstacle = Elapsed + (stageNumber == 2 ? 6 : stageNumber == 3 ? 5 : 7);
+            if (Elapsed >= Duration) State = Phase.Clearing;
+            return true;
+        }
         private void SpawnObstacle()
         {
             if (stageNumber < 2) return;

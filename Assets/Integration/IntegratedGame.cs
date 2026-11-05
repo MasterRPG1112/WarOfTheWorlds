@@ -217,6 +217,39 @@ namespace Integration
                 IntegrationSaveStore.Save();
             }
         }
+        bool DevelopmentControlsAllowed
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                var cheats = GetComponent<CampaignCheats>();
+                return started && !ended && player != null && player.Health > 0 && cheats != null && cheats.Allowed;
+#else
+                return false;
+#endif
+            }
+        }
+        public bool AdvanceSurvivalForTesting(float seconds)
+        {
+            if (!DevelopmentControlsAllowed || !director.AdvanceSurvivalClock(seconds)) return false;
+            if (RankedRun) MarkPracticeRun();
+            return true;
+        }
+        public bool SkipToNextStageForTesting()
+        {
+            if (!DevelopmentControlsAllowed || director.stageNumber >= 3) return false;
+            if (RankedRun) MarkPracticeRun();
+            SaveCheckpoint();
+            IntegrationSaveStore.Data.checkpoint.stage = director.stageNumber + 1;
+            IntegrationSaveStore.Data.checkpoint.practice = true;
+            IntegrationSaveStore.Save();
+            IntegrationSaveStore.ContinueRequested = true;
+            CampaignCheats.ResumeAfterChapterSkip = true;
+            Time.timeScale = 1;
+            ReleaseSessionData();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            return true;
+        }
         public bool SubmitVictory(string playerId)
         {
             if (!ended || !Won || ResultSubmitted || !RankedRun) return false;
