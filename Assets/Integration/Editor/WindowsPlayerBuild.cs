@@ -18,17 +18,30 @@ namespace Integration.Editor
             public string output;
             public string completedUtc;
             public string result;
+            public bool development;
         }
-        public static void BuildExistingScenes()
+        public static void BuildExistingScenes() => Build(false, false);
+        public static void BuildTestingScenes() => Build(true, false);
+        public static void BuildBothVariants() => Build(false, true);
+        static void Build(bool development, bool both)
         {
             if (!Application.isBatchMode)
                 throw new InvalidOperationException("Use the user-operated Windows build launcher in a separate session.");
             string root = Directory.GetParent(Application.dataPath).FullName;
-            string output = Path.Combine(root, RelativeOutput);
-            string receipt = Path.Combine(root, "Builds/Windows/build-success.json");
             int exit = 1;
             try
             {
+                BuildVariant(root, development);
+                if (both) BuildVariant(root, true);
+                exit = 0;
+            }
+            catch (Exception exception) { Debug.LogException(exception); }
+            finally { EditorApplication.Exit(exit); }
+        }
+        static void BuildVariant(string root, bool development)
+        {
+                string output = Path.Combine(root, development ? "Builds/Windows-Test/WarOfTheWorlds.exe" : RelativeOutput);
+                string receipt = Path.Combine(Path.GetDirectoryName(output), "build-success.json");
                 Directory.CreateDirectory(Path.GetDirectoryName(output));
                 if (File.Exists(receipt)) File.Delete(receipt);
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
@@ -36,7 +49,7 @@ namespace Integration.Editor
                     scenes = new[] { IntegrationBuilder.MenuPath, IntegrationBuilder.ScenePath },
                     locationPathName = output,
                     target = BuildTarget.StandaloneWindows64,
-                    options = BuildOptions.None
+                    options = development ? BuildOptions.Development : BuildOptions.None
                 });
                 if (report.summary.result != BuildResult.Succeeded || !File.Exists(output))
                     throw new InvalidOperationException("Windows build failed: " + report.summary.result);
@@ -47,14 +60,10 @@ namespace Integration.Editor
                     request = requestAt >= 0 && requestAt + 1 < args.Length ? args[requestAt + 1] : "",
                     output = output,
                     completedUtc = DateTime.UtcNow.ToString("o"),
-                    result = "Succeeded"
+                    result = "Succeeded", development = development
                 };
                 File.WriteAllText(receipt, JsonUtility.ToJson(saved, true));
                 Debug.Log("CAMPAIGN_WINDOWS_BUILD_SUCCEEDED " + output);
-                exit = 0;
-            }
-            catch (Exception exception) { Debug.LogException(exception); }
-            finally { EditorApplication.Exit(exit); }
         }
     }
 }

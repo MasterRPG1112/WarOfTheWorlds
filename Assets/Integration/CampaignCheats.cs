@@ -7,57 +7,116 @@ namespace Integration
     {
         [Tooltip("Development builds only. Default off; use a separate practice run.")]
         public bool enableDevelopmentCheats;
+        public KeyCode toggleKey = KeyCode.F12;
         public KeyCode debugKey = KeyCode.F1, invulnerableKey = KeyCode.F2,
             defeatEnemiesKey = KeyCode.F3, moneyKey = KeyCode.F4;
         [Min(1)] public int moneyAmount = 1000;
         public bool ShowColliders { get; private set; }
-        public bool Allowed
+        public bool CheatModeAvailable
         {
             get
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                return enableDevelopmentCheats;
+                return true;
 #else
                 return false;
 #endif
             }
         }
+        public bool Allowed => CheatModeAvailable && enableDevelopmentCheats;
+        void OnValidate() => ValidateToggleKey();
+        void ValidateToggleKey()
+        {
+            if (IsFunctionKey(toggleKey) && toggleKey != debugKey && toggleKey != invulnerableKey &&
+                toggleKey != defeatEnemiesKey && toggleKey != moneyKey) return;
+            // Reserve a distinct function key so toggling cannot also grant an action.
+            for (int value = (int)KeyCode.F12; value >= (int)KeyCode.F1; value--)
+            {
+                var candidate = (KeyCode)value;
+                if (candidate == debugKey || candidate == invulnerableKey || candidate == defeatEnemiesKey || candidate == moneyKey) continue;
+                toggleKey = candidate;
+                return;
+            }
+        }
+        public bool ToggleDevelopmentMode()
+        {
+            var game = IntegratedGame.Active;
+            if (!CheatModeAvailable)
+            {
+                enableDevelopmentCheats = false;
+                ClearActiveCheats(game);
+                return false;
+            }
+            if (game == null) return false;
+            enableDevelopmentCheats = !enableDevelopmentCheats;
+            if (enableDevelopmentCheats)
+            {
+                if (game.RankedRun) game.MarkPracticeRun();
+            }
+            else ClearActiveCheats(game);
+            // Switching off never restores rank eligibility or checkpoint status.
+            return enableDevelopmentCheats;
+        }
         void Update()
         {
             var game = IntegratedGame.Active;
-            if (!Allowed)
+            if (!CheatModeAvailable)
             {
-                ShowColliders = false;
-                if (game != null && game.player != null) game.player.CheatInvulnerable = false;
+                enableDevelopmentCheats = false;
+                ClearActiveCheats(game);
                 return;
             }
-            if (game == null || !game.Running) return;
+            ValidateToggleKey();
+            if (Pressed(toggleKey)) { ToggleDevelopmentMode(); return; }
+            if (!Allowed) { ClearActiveCheats(game); return; }
+            if (game != null && game.RankedRun) game.MarkPracticeRun();
+            if (Pressed(debugKey)) ExecuteCheat(0);
+            if (Pressed(invulnerableKey)) ExecuteCheat(1);
+            if (Pressed(defeatEnemiesKey)) ExecuteCheat(2);
+            if (Pressed(moneyKey)) ExecuteCheat(3);
+        }
+        public bool ExecuteCheat(int action)
+        {
+            var game = IntegratedGame.Active;
+            if (!Allowed || game == null || !game.HasStarted || game.Ended || game.player == null || action < 0 || action > 3) return false;
+            // Currency and toggles remain available while paused or shopping.
+            // Enemy defeat stays in running play so its ordinary reward path runs.
+            if (action == 2 && !game.Running) return false;
+            if (action == 3 && game.shop == null) return false;
             if (game.RankedRun) game.MarkPracticeRun();
-            if (Pressed(debugKey)) { ShowColliders = !ShowColliders; game.MarkPracticeRun(); }
-            if (Pressed(invulnerableKey)) { game.player.CheatInvulnerable = !game.player.CheatInvulnerable; game.MarkPracticeRun(); }
-            if (Pressed(defeatEnemiesKey))
+            if (action == 0) ShowColliders = !ShowColliders;
+            else if (action == 1) game.player.CheatInvulnerable = !game.player.CheatInvulnerable;
+            else if (action == 2)
             {
-                game.MarkPracticeRun();
                 Rect view = BattleArena.ViewBounds();
                 foreach (var enemy in FindObjectsByType<EnemyShip>(FindObjectsSortMode.None))
                     if (enemy.GetComponentInParent<IntegratedBossTarget>() == null && view.Contains(enemy.transform.position))
                         enemy.TakeDamage(int.MaxValue, Vector2.zero);
             }
-            if (Pressed(moneyKey))
+            else if (action == 3)
             {
-                game.MarkPracticeRun();
                 game.shop.coin = (int)System.Math.Min(int.MaxValue, (long)game.shop.coin + Mathf.Max(1, moneyAmount));
                 game.shop.SyncLegacyData(false);
+                if (game.shop.coinUI != null) game.shop.coinUI.text = "남은 돈 : " + game.shop.coin + "벨";
             }
+            return true;
         }
-        static bool Pressed(KeyCode key) => CampaignRules.IsFunctionKey((int)key, (int)KeyCode.F1, (int)KeyCode.F12) && Input.GetKeyDown(key);
+        void ClearActiveCheats(IntegratedGame game)
+        {
+            ShowColliders = false;
+            if (game != null && game.player != null) game.player.CheatInvulnerable = false;
+        }
+        void OnDisable() => ClearActiveCheats(IntegratedGame.Active);
+        static bool IsFunctionKey(KeyCode key) => CampaignRules.IsFunctionKey((int)key, (int)KeyCode.F1, (int)KeyCode.F12);
+        static bool Pressed(KeyCode key) => IsFunctionKey(key) && Input.GetKeyDown(key);
         void OnGUI()
         {
             var game = IntegratedGame.Active;
-            if (!Allowed || game == null) return;
-            GUI.color = Color.yellow;
-            GUI.Label(new Rect(12, Screen.height - 48, 700, 30), "개발·테스트 모드 / 랭킹 제외: " + debugKey + " 충돌범위 · " + invulnerableKey + " 무적 · " + defeatEnemiesKey + " 일반 적 제거 · " + moneyKey + " 돈");
-            if (ShowColliders && Camera.main != null)
+            if (!CheatModeAvailable || game == null) return;
+            GUI.color = Allowed ? Color.yellow : Color.white;
+            GUI.Label(new Rect(12, Screen.height - 48, 700, 30), toggleKey + " 테스트 치트: " +
+                (Allowed ? "끄기 · 랭킹 제외 | " + debugKey + " 충돌 · " + invulnerableKey + " 무적 · " + defeatEnemiesKey + " 적 제거 · " + moneyKey + " +" + moneyAmount : "켜기 (기본 OFF · 활성화 시 랭킹 제외)"));
+            if (Allowed && ShowColliders && Camera.main != null)
             {
                 foreach (var enemy in FindObjectsByType<EnemyShip>(FindObjectsSortMode.None)) DrawColliders(enemy.gameObject);
                 foreach (var bullet in FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None)) DrawColliders(bullet.gameObject);

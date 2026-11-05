@@ -19,6 +19,7 @@ namespace Integration
         public int part1;
         public int part2;
         public int part3;
+        public int equippedPartsMask = -1;
         public int stop;
         public int reflex;
         public int pull;
@@ -35,7 +36,7 @@ namespace Integration
     [Serializable]
     public class SaveFile
     {
-        public int version = 3;
+        public int version = 4;
         public Checkpoint checkpoint;
         public List<GameDataManager.RankData> ranks = new List<GameDataManager.RankData>();
         public float volume = 1;
@@ -92,7 +93,7 @@ namespace Integration
                 if (json.Length < 2 || json[0] != '{' || json[json.Length - 1] != '}')
                     throw new FormatException("The save is not a JSON object.");
                 SaveFile loaded = JsonUtility.FromJson<SaveFile>(json);
-                if (loaded == null || loaded.version < 1 || loaded.version > 3)
+                if (loaded == null || loaded.version < 1 || loaded.version > 4)
                     throw new FormatException("The save version is unsupported.");
                 rejectedDiskFile = !Validate(loaded);
                 data = loaded;
@@ -208,6 +209,9 @@ namespace Integration
                     checkpoint.part1 = Mathf.Max(0, checkpoint.part1);
                     checkpoint.part2 = Mathf.Max(0, checkpoint.part2);
                     checkpoint.part3 = Mathf.Max(0, checkpoint.part3);
+                    int ownedParts = (checkpoint.part1 > 0 ? 1 : 0) | (checkpoint.part2 > 0 ? 2 : 0) | (checkpoint.part3 > 0 ? 4 : 0);
+                    checkpoint.equippedPartsMask = save.version < 4 || checkpoint.equippedPartsMask < 0
+                        ? ownedParts : checkpoint.equippedPartsMask & ownedParts & 7;
                     checkpoint.stop = Mathf.Max(0, checkpoint.stop);
                     checkpoint.reflex = Mathf.Max(0, checkpoint.reflex);
                     checkpoint.pull = Mathf.Max(0, checkpoint.pull);
@@ -234,7 +238,7 @@ namespace Integration
                     if (checkpoint.patchSlot1 >= 0 && (checkpoint.ownedMask & (1 << checkpoint.patchSlot1)) == 0) checkpoint.patchSlot1 = -1;
                 }
             }
-            save.version = 3;
+            save.version = 4;
             save.volume = float.IsNaN(save.volume) || float.IsInfinity(save.volume) ? 1 : Mathf.Clamp01(save.volume);
             if (save.ranks == null) save.ranks = new List<GameDataManager.RankData>();
             for (int index = 0; index < save.ranks.Count; index++)

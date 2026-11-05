@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Integration
 {
@@ -64,6 +65,15 @@ namespace Integration
             captures++;
             report.AppendLine("PASS GPU capture " + name);
         }
+        void ClickPart(IntegratedGame game, string method)
+        {
+            foreach (var button in game.shop.shopMenu.GetComponentsInChildren<Button>(true))
+                for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
+                    if (button.gameObject.activeInHierarchy && button.onClick.GetPersistentTarget(i) == game.shop &&
+                        button.onClick.GetPersistentMethodName(i) == method)
+                    { button.onClick.Invoke(); return; }
+            throw new InvalidOperationException("No visible existing shop button bound to " + method);
+        }
         IEnumerator Run()
         {
             yield return new WaitForSecondsRealtime(1);
@@ -95,6 +105,35 @@ namespace Integration
             yield return new WaitForSecondsRealtime(.2f);
             Check(!game.Running && game.pausePanel.activeInHierarchy, "Pause panel opens");
             Capture("06-pause");
+            var shopControl = game.pausePanel.transform.Find("Shop and parts");
+            Check(shopControl != null, "Pause menu includes the shop and parts action");
+            shopControl.GetComponent<Button>().onClick.Invoke();
+            yield return new WaitForSecondsRealtime(.2f);
+            Check(game.ShopAccessible && !game.BetweenStages && game.shop.shopMenu.activeInHierarchy && !game.Running,
+                "Shop is accessible from pause in stage1");
+            Capture("07-shop");
+            game.shop.coin = 2000;
+            game.shop.RefreshUI();
+            ClickPart(game, "SpeedBtn");
+            Check(game.shop.IsPartEquipped(1) && game.player.movement.speed == 7,
+                "Part purchase equips turbo and applies its speed");
+            Capture("08-part-equipped");
+            ClickPart(game, "SpeedBtn");
+            Check(game.shop.part2 == 1 && !game.shop.IsPartEquipped(1) && game.player.movement.speed == 5,
+                "Owned part can be unequipped and effect removed");
+            Capture("09-part-unequipped");
+            var cheats = game.GetComponent<CampaignCheats>();
+            Check(!cheats.Allowed, "Cheats default disabled");
+            if (cheats.CheatModeAvailable)
+            {
+                Check(cheats.ToggleDevelopmentMode(), "Development mode can be enabled");
+                int coins = game.shop.coin;
+                Check(cheats.ExecuteCheat(3) && game.shop.coin == coins + cheats.moneyAmount, "Development money cheat works in pause shop");
+                Check(!cheats.ToggleDevelopmentMode() && !game.RankedRun, "Practice status survives disabling cheats");
+            }
+            else Check(!cheats.ToggleDevelopmentMode() && !cheats.ExecuteCheat(3), "Release build rejects cheat activation");
+            game.CloseShop();
+            Check(game.pausePanel.activeInHierarchy && !game.Running, "Shop back returns to pause controls");
             game.BackToMenu();
             yield return new WaitForSecondsRealtime(1);
             menu = FindFirstObjectByType<IntegratedMenu>();

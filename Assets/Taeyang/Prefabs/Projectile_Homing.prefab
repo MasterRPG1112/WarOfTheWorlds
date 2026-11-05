@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70eac8ceef353594e96b9b781b144de2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Taeyang.EnemyProjectile
-  speed: 5
+  speed: 4
   rotationSpeed: 175
   lifetime: 8.5
   enemyDamage: 20

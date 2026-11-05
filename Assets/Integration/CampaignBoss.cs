@@ -20,7 +20,7 @@ namespace Integration
         public string PatternName => Names[Mathf.Clamp(stageNumber, 1, 3) - 1, Mathf.Clamp(pattern, 0, 3)];
         static readonly string[,] Names = {
             { "원형 탄막", "부채꼴 탄막", "돌진", "다중 원형 탄막" },
-            { "유도 미사일", "회전 탄막", "예측 집중 포격", "다방향 미사일" },
+            { "쌍포 연속 사격", "회전 탄막", "예측 집중 포격", "순차 교차 포격" },
             { "나선 탄막", "확산 탄막", "예측 포격", "성운 차단 탄막" }
         };
         enum AttackState { Recovery, Warning, Attack, Death }
@@ -60,7 +60,7 @@ namespace Integration
             boss.director = owner;
             boss.deactivateOnDefeat = false;
             EnemyShip source = owner.enemyPrefabs[2];
-            boss.projectilePrefab = source.straightProjectile != null ? source.straightProjectile : source.homingProjectile;
+            boss.projectilePrefab = source.straightProjectile;
             Sprite sprite = Resources.Load<Sprite>("CampaignArt/boss-stage" + owner.stageNumber);
             var sourceVisual = source.GetComponent<SpriteRenderer>();
             var visual = new GameObject("Boss hull artwork").AddComponent<SpriteRenderer>();
@@ -181,7 +181,17 @@ namespace Integration
             {
                 for (int i = 0; i < 4; i++) BossTelegraph.Line(warnings.transform, Edge(i), aimPoint, .14f, color);
             }
-            else if ((stageNumber == 1 && pattern == 1) || (stageNumber == 2 && pattern == 0))
+            else if (stageNumber == 2 && pattern == 0)
+            {
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector2 origin = Cannon(side);
+                    float angle = Angle(aimPoint - origin);
+                    for (int i = -1; i <= 1; i++)
+                        BossTelegraph.Line(warnings.transform, origin, origin + Direction(angle + i * 8) * 7, .1f, color);
+                }
+            }
+            else if (stageNumber == 1 && pattern == 1)
             {
                 for (int i = -1; i <= 1; i++) BossTelegraph.Line(warnings.transform, body.position, body.position + Direction(gapAngle + i * 20) * 7, .1f, color);
             }
@@ -225,8 +235,10 @@ namespace Integration
             {
                 if (pattern == 0 && volley < 3)
                 {
-                    Shoot(body.position + Vector2.left * 1.1f, gapAngle - 18, speed, true);
-                    Shoot(body.position + Vector2.right * 1.1f, gapAngle + 18, speed, true);
+                    // Both cannons keep the warning-time aim point for all three salvos.
+                    // After launch each bolt has a fixed heading, leaving room to sidestep.
+                    Fan(Cannon(-1), Angle(aimPoint - Cannon(-1)), 3, 8, speed);
+                    Fan(Cannon(1), Angle(aimPoint - Cannon(1)), 3, 8, speed);
                     shotTimer = .65f;
                 }
                 else if (pattern == 1 && volley < 15)
@@ -242,7 +254,7 @@ namespace Integration
                     for (int i = 0; i < 2; i++)
                     {
                         Vector2 origin = Edge((volley + i * 2) % 4);
-                        Shoot(origin, Angle(aimPoint - origin), speed * .85f, true);
+                        Shoot(origin, Angle(aimPoint - origin), speed * .85f);
                     }
                     shotTimer = .75f;
                 }
@@ -278,23 +290,23 @@ namespace Integration
             for (int i = 0; i < count; i++) Shoot(origin, angle + (i - (count - 1) * .5f) * spread, speed);
         }
 
-        void Shoot(Vector2 origin, float angle, float speed, bool homing = false)
+        void Shoot(Vector2 origin, float angle, float speed)
         {
             if (projectilePrefab == null) return;
             var player = IntegratedGame.Active != null ? IntegratedGame.Active.player : null;
             if (player == null) return;
-            // Edge missiles and hull-origin bullets never materialize on a player's
+            // Edge crossfire and hull-origin bullets never materialize on a player's
             // actual hit surfaces. Keep at least .2 seconds of extra travel space.
             float safeDistance = 1.2f + speed * .2f;
             foreach (var hitbox in player.GetComponentsInChildren<Collider2D>())
                 if (hitbox.enabled && (hitbox.ClosestPoint(origin) - origin).sqrMagnitude < safeDistance * safeDistance) return;
             EnemyProjectile bullet = Instantiate(projectilePrefab, origin, Quaternion.identity);
             bullet.speed = speed;
-            bullet.rotationSpeed = homing ? 34 : 0;
-            bullet.lifetime = homing ? 5 : 6;
-            bullet.Initialize(null, Direction(angle), homing ? player.transform : null);
+            bullet.rotationSpeed = 0;
+            bullet.lifetime = 6;
+            bullet.Initialize(null, Direction(angle), null);
             var visual = bullet.GetComponent<SpriteRenderer>();
-            Sprite art = Resources.Load<Sprite>(homing ? "CampaignArt/boss-missile" : "CampaignArt/boss-bullet");
+            Sprite art = Resources.Load<Sprite>("CampaignArt/boss-bullet");
             if (visual != null && art != null)
             {
                 visual.sprite = art;
@@ -307,14 +319,16 @@ namespace Integration
                 child.sharedMaterial = visual.sharedMaterial;
                 child.sortingOrder = visual.sortingOrder;
                 float worldScale = Mathf.Max(.01f, Mathf.Abs(bullet.transform.lossyScale.y));
-                child.transform.localScale = Vector3.one * ((homing ? .9f : .8f) / (Mathf.Max(.01f, art.bounds.size.y) * worldScale));
+                child.transform.localScale = Vector3.one * (.8f / (Mathf.Max(.01f, art.bounds.size.y) * worldScale));
                 var circle = bullet.GetComponent<CircleCollider2D>();
-                if (circle != null) circle.radius = (homing ? .17f : .06f) /
+                if (circle != null) circle.radius = .06f /
                     Mathf.Max(.01f, Mathf.Max(Mathf.Abs(bullet.transform.lossyScale.x), Mathf.Abs(bullet.transform.lossyScale.y)));
             }
             projectiles.Add(bullet);
             if (projectiles.Count > 160) projectiles.RemoveAll(p => p == null);
         }
+
+        Vector2 Cannon(int side) => body.position + Vector2.right * (side * 1.1f);
 
         Vector2 Edge(int side)
         {

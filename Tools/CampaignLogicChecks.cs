@@ -35,9 +35,13 @@ public static class CampaignLogicChecks
                     "Stage " + stage + " checkpoint retains all four inventories and practice status");
             }
             var legacy = new SaveFile { version = 1, checkpoint = new Checkpoint { stage = 2, coreHp = 20, pull = 2, patchSlot0 = 0, patchSlot1 = 0 } };
-            Check(Validate(legacy) && legacy.version == 3 && legacy.checkpoint.coreHp == 8, "Version 1 checkpoint migrates with shared HP capped at 8");
+            Check(Validate(legacy) && legacy.version == 4 && legacy.checkpoint.coreHp == 8, "Version 1 checkpoint migrates with shared HP capped at 8");
             Check(legacy.checkpoint.pull == 2 && legacy.checkpoint.ownedMask == 1 && legacy.checkpoint.patchSlot0 == -1 && legacy.checkpoint.patchSlot1 == -1,
                 "Legacy migration preserves real stock without granting slot ownership");
+            var oldParts = new SaveFile { version = 3, checkpoint = new Checkpoint { part1 = 1, part2 = 1, part3 = 1, equippedPartsMask = 0 } };
+            Check(Validate(oldParts) && oldParts.checkpoint.equippedPartsMask == 7, "Version 3 owned parts migrate as equipped to preserve existing effects");
+            var unequipped = new SaveFile { version = 4, checkpoint = new Checkpoint { part2 = 1, part3 = 1, equippedPartsMask = 4 } };
+            Check(Validate(unequipped) && unequipped.checkpoint.equippedPartsMask == 4, "Current save retains intentionally unequipped owned parts");
             var corrupt = new SaveFile { checkpoint = new Checkpoint { stage = 9 }, volume = float.NaN };
             Check(!Validate(corrupt) && corrupt.checkpoint == null && corrupt.volume == 1, "Invalid stage and volume cannot create a corrupt continuation");
             var negatives = new SaveFile { checkpoint = new Checkpoint { coreHp = -1, money = -1, score = -2, pull = -5, shields = 999 } };

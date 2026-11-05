@@ -68,7 +68,7 @@ namespace Integration
             // 7. 조작 설명 (좌측 하단 모서리 밀착)
             var help = Label(transform, "조작", new Vector2(310, 55), new Vector2(30, 40), 15);
             help.rectTransform.anchorMin = help.rectTransform.anchorMax = new Vector2(0, 0);
-            help.text = "WASD / 방향키 · 미사일 유도\nB / V / R / T 스킬 · P 보유량 · Esc 정지";
+            help.text = "WASD 이동 · B/V/R/T 스킬\nP 보유량 · O 상점/파츠 · Esc 정지";
             // -------------------------------------------------------------
 
             patchPanel = Box(transform, "패치 장착", new Vector2(.5f, .5f), new Vector2(.5f, .5f), new Vector2(1000, 570), Vector2.zero);
@@ -85,6 +85,7 @@ namespace Integration
         {
             if (patchPanel.activeSelf) { ClosePatches(); return; }
             if (game.Ended || (!game.Running && !game.BetweenStages && !game.HasStarted)) return;
+            if (game.shop.shopMenu.activeInHierarchy) game.CloseShop();
             resumeAfterPatches = game.Running;
             if (resumeAfterPatches) game.TogglePause();
             game.pausePanel.SetActive(false); patchPanel.SetActive(true);
@@ -106,11 +107,14 @@ namespace Integration
         void Update()
         {
             if (healthText == null || game.player == null) return;
+            if (game.shop.shopMenu.activeInHierarchy && patchPanel.activeSelf) patchPanel.SetActive(false);
             if (Input.GetKeyDown(KeyCode.P)) { if (patchPanel.activeSelf) ClosePatches(); else OpenPatches(); }
             if (game.Running && patchPanel.activeSelf) patchPanel.SetActive(false);
             healthText.text = "HP " + game.player.Health + " / 8"; healthFill.fillAmount = game.player.Health / 8f;
             healthFill.rectTransform.sizeDelta = new Vector2(250 * game.player.Health / 8f, 18);
             stageText.text = "STAGE " + game.director.stageNumber + " / 3  WAVE " + game.director.Wave + " / 5\n생존 " + game.director.Elapsed.ToString("000") + " / 300초" + (game.BetweenStages ? " · 스테이지 클리어 / 상점" : "");
+            string parts = (game.shop.IsPartEquipped(0) ? "동력원 " : "") + (game.shop.IsPartEquipped(1) ? "터보 " : "") + (game.shop.IsPartEquipped(2) ? "철갑 " : "");
+            stageText.text += "\n파츠: " + (parts.Length == 0 ? "미장착" : parts.Trim()) + " · O 상점/변경";
             if (game.director.allowMissingBossTestSkip && game.director.bossPrefab == null &&
                 (game.director.campaignBossPrefabs == null || game.director.campaignBossPrefabs.Length < game.director.stageNumber || game.director.campaignBossPrefabs[game.director.stageNumber - 1] == null)) stageText.text += "\n보스 미등록 · 테스트 진행 경로";
             scoreText.text = "점수 " + game.score.score + "  |  재화 " + game.shop.coin + "\n보호막 " + game.player.ShieldCount + (game.RankedRun ? "" : " · 테스트");

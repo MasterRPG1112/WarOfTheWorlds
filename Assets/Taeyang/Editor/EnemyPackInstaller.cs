@@ -43,7 +43,7 @@ namespace Taeyang.Editor
                 EnsureSprite("Projectile_Bomb", 150);
                 EnsureSprite("Player_Demo", 180);
 
-                EnemyProjectile homing = CreateProjectile("Projectile_Homing", 5.0f, 175f, 20);
+                EnemyProjectile homing = CreateProjectile("Projectile_Homing", 4.0f, 175f, 20);
                 EnemyProjectile straight = CreateProjectile("Projectile_Straight", 7.0f, 0f, 16);
                 EnemyProjectile bomb = CreateProjectile("Projectile_Bomb", 4.0f, 0f, 30);
 

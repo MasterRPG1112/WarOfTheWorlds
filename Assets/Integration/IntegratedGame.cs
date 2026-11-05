@@ -19,6 +19,7 @@ namespace Integration
         public bool Running => started && !paused && !ended && !betweenStages;
         public bool BetweenStages => betweenStages;
         public bool HasStarted => started;
+        public bool ShopAccessible => started && !ended && (paused || betweenStages);
         public int Kills { get; private set; }
         public bool Won { get; private set; }
         public bool Ended => ended;
@@ -44,6 +45,7 @@ namespace Integration
             narrative = GetComponent<CampaignNarrative>();
             if (narrative == null) narrative = gameObject.AddComponent<CampaignNarrative>();
             if (GetComponent<CampaignCheats>() == null) gameObject.AddComponent<CampaignCheats>();
+            BindPauseShop();
             if (director.stageNumber == 1 && !loadingCheckpoint) narrative.PlayOpening(this);
             else StartGame();
         }
@@ -66,6 +68,7 @@ namespace Integration
             player.equippedPatches = new[] { -1, -1 };
             shop.coin = 0;
             shop.part1 = shop.part2 = shop.part3 = 0;
+            shop.equippedPartsMask = 0;
             shop.pull = shop.slow = shop.reflex = shop.stop = 0;
             shop.partLicense = 1;
             score.score = 0;
@@ -95,16 +98,45 @@ namespace Integration
 
         public void OpenShop()
         {
-            if (!started || ended || !betweenStages) return;
+            if (!started || ended) return;
+            if (!betweenStages) paused = true;
             Time.timeScale = 0;
             if (pausePanel != null) pausePanel.SetActive(false);
             shop.shopMenu.SetActive(true);
+            shop.RefreshUI();
+        }
+        public void CloseShop()
+        {
+            shop.shopMenu.SetActive(false);
+            if (!betweenStages && paused && !ended && pausePanel != null) pausePanel.SetActive(true);
+        }
+        void BindPauseShop()
+        {
+            if (pausePanel == null || pausePanel.transform.Find("Shop and parts") != null) return;
+            Button template = null;
+            foreach (var button in pausePanel.GetComponentsInChildren<Button>(true))
+                if (button.name == "RESTART") { template = button; break; }
+            if (template == null) return;
+            var copy = Instantiate(template.gameObject, template.transform.parent);
+            copy.name = "Shop and parts";
+            var rect = copy.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -120);
+            var action = copy.GetComponent<Button>();
+            action.onClick = new Button.ButtonClickedEvent();
+            action.onClick.AddListener(OpenShop);
+            var label = copy.GetComponentInChildren<Text>(true);
+            if (label != null) label.text = "상점 / 파츠 (O)";
+            copy.SetActive(true);
         }
         void Update()
         {
             if (!started || ended) return;
             SyncPatchOwnership();
             if (Time.frameCount > startFrame && Input.GetKeyDown(KeyCode.Escape)) TogglePause();
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                if (shop.shopMenu.activeInHierarchy) CloseShop(); else OpenShop();
+            }
             if (hpUI != null) foreach (var ui in hpUI) if (ui != null) ui.ReloadUI();
             if (status != null) status.text = $"Stage {director.stageNumber}/3   Wave {director.Wave}/5   {director.Elapsed:000}/300s   HP {player.data.PlayerHp}/8\nMove: WASD/Arrows | Skills: B / V / R / T | Inventory: P | Pause: Esc\nStock: Black Hole {shop.pull} | Slow {shop.slow} | Reflect {shop.reflex} | Stop {shop.stop}";
             if (Running && director.State == StageDirector.Phase.Clear)
@@ -154,6 +186,7 @@ namespace Integration
         public void TogglePause()
         {
             if (!started || betweenStages || ended) return;
+            if (shop.shopMenu.activeInHierarchy) { CloseShop(); return; }
             paused = !paused;
             if (pausePanel != null) pausePanel.SetActive(paused);
             Time.timeScale = paused ? 0 : 1;
@@ -222,7 +255,8 @@ namespace Integration
             var c = new Checkpoint { stage = director.stageNumber, coreHp = Mathf.Clamp(player.data.PlayerHp, 1, 8),
                 score = score.score, money = shop.coin, part1 = shop.part1, part2 = shop.part2, part3 = shop.part3,
                 stop = shop.stop, reflex = shop.reflex, pull = shop.pull, slow = shop.slow,
-                ownedMask = player.ownedMask, shields = player.data.HaveShield, practice = !RankedRun };
+                ownedMask = player.ownedMask, shields = player.data.HaveShield, practice = !RankedRun,
+                equippedPartsMask = shop.EquippedPartsMask };
             IntegrationSaveStore.Data.checkpoint = c;
             IntegrationSaveStore.Save();
         }
@@ -236,6 +270,7 @@ namespace Integration
             EnablePlayerColliders();
             score.score = c.score; shop.coin = c.money;
             shop.part1 = c.part1; shop.part2 = c.part2; shop.part3 = c.part3;
+            shop.equippedPartsMask = c.equippedPartsMask;
             shop.stop = c.stop; shop.reflex = c.reflex; shop.pull = c.pull; shop.slow = c.slow;
             shop.partLicense = 1;
             player.selectedSkill = -1;
@@ -263,6 +298,8 @@ namespace Integration
             score.scoreUI.text = "Score : " + score.score;
             shop.coinUI.text = "남은 돈 : " + shop.coin + "벨";
             shop.SyncLegacyData(false);
+            shop.RefreshUI();
+            player.RefreshPartEffects();
             if (GameDataManager.instance != null) GameDataManager.instance.score = score.score;
         }
     }

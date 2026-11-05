@@ -36,7 +36,7 @@ namespace Integration
         float protectedUntil, invulnerableUntil;
         public int Health => data != null ? Mathf.Clamp(data.PlayerHp, 0, MaxHealth) : 0;
         public int RamDamage => IntegratedGame.Active != null && IntegratedGame.Active.shop != null &&
-            IntegratedGame.Active.shop.part3 > 0 ? baseRamDamage + armorRamBonus : baseRamDamage;
+            IntegratedGame.Active.shop.IsPartEquipped(2) ? baseRamDamage + armorRamBonus : baseRamDamage;
         public int ShieldCount => data != null ? Mathf.Clamp(data.HaveShield, 0, maxShields) : 0;
         public float InvulnerabilityRemaining => Mathf.Max(0, invulnerableUntil - Time.time);
         public bool IsInvulnerable => CheatInvulnerable || Time.time < invulnerableUntil ||
@@ -57,13 +57,20 @@ namespace Integration
             MirrorHealth();
             RefreshPatchOwnership();
             var game = IntegratedGame.Active;
+            RefreshPartEffects();
             if (game == null || !game.Running) return;
-            if (movement != null) movement.speed = baseMoveSpeed + (game.shop != null && game.shop.part2 > 0 ? turboSpeedBonus : 0);
             if (Health <= 0) { game.End(false); return; }
             if (Input.GetKeyDown(KeyCode.B)) TryUsePatch(0);
             if (Input.GetKeyDown(KeyCode.V)) TryUsePatch(1);
             if (Input.GetKeyDown(KeyCode.R)) TryUsePatch(2);
             if (Input.GetKeyDown(KeyCode.T)) TryUsePatch(3);
+        }
+
+        public void RefreshPartEffects()
+        {
+            var game = IntegratedGame.Active;
+            if (movement != null) movement.speed = baseMoveSpeed +
+                (game != null && game.shop != null && game.shop.IsPartEquipped(1) ? turboSpeedBonus : 0);
         }
 
         void MirrorHealth()
@@ -90,12 +97,11 @@ namespace Integration
             if (movement != null) movement.AddKnockback(away.normalized * 5);
             if (data.HaveShield > 0) { data.HaveShield--; return; }
             hitsTaken++;
-            if (game.shop != null && game.shop.part1 > 0 && Health <= amount)
+            if (game.shop != null && game.shop.IsPartEquipped(0) && Health <= amount)
             {
-                game.shop.part1 = 0;
+                game.shop.ConsumeEmergencyPart();
                 data.PlayerHp = Mathf.Clamp(emergencyHealth, 1, MaxHealth);
                 protectedUntil = Time.time + 1.5f;
-                game.shop.SyncLegacyData(false);
             }
             else data.PlayerHp = Mathf.Max(0, Health - amount);
             MirrorHealth();

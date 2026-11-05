@@ -13,7 +13,7 @@ param(
     [Parameter(Mandatory)][string]$ReferenceProject,
     [string]$OutputDirectory = (Join-Path (Split-Path -Parent $PSScriptRoot) 'work\offline-validation'),
     [string]$BaseRef = '5327764858af3b54aa2ea59533ae9a0adecc4a37',
-    [string[]]$AllowedSerializedKeys = @('hp','maxHp','playerHp','integrated','m_TagString','noBossCampaign','allowMissingBossTestSkip'),
+    [string[]]$AllowedSerializedKeys = @('hp','maxHp','playerHp','integrated','m_TagString','noBossCampaign','allowMissingBossTestSkip','speed'),
     [switch]$SkipCompile
 )
 

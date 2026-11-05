@@ -12,6 +12,11 @@ namespace Jain
         public int part1; //비상 동력원
         public int part2; //터보 엔진
         public int part3; //방호 철갑탄
+        [Tooltip("-1 equips all previously owned parts for legacy saves. Bits: emergency / engine / armor.")]
+        public int equippedPartsMask = -1;
+        public int OwnedPartsMask => (part1 > 0 ? 1 : 0) | (part2 > 0 ? 2 : 0) | (part3 > 0 ? 4 : 0);
+        public int EquippedPartsMask => equippedPartsMask < 0 ? OwnedPartsMask : equippedPartsMask & OwnedPartsMask & 7;
+        static readonly string[] PartNames = { "비상 동력원", "터보 엔진", "방호 철갑탄" };
 
         //스테이지 클리어 시 파츠 구매 권한
         public int partLicense;
@@ -63,6 +68,8 @@ namespace Jain
         
         public void BackBtn()
         {
+            var campaign = Integration.IntegratedGame.Active;
+            if (campaign != null && campaign.shop == this) { campaign.CloseShop(); return; }
             if (shopMenu != null) shopMenu.SetActive(false);
         }
 
@@ -88,17 +95,45 @@ namespace Jain
 
         public void LifeBtn()
         {
-            TryBuyPart(0);
+            SelectPart(0);
         }
 
         public void SpeedBtn()
         {
-            TryBuyPart(1);
+            SelectPart(1);
         }
 
         public void HpBtn()
         {
-            TryBuyPart(2);
+            SelectPart(2);
+        }
+
+        void SelectPart(int kind)
+        {
+            if ((OwnedPartsMask & (1 << kind)) != 0) TogglePart(kind);
+            else TryBuyPart(kind);
+        }
+
+        public bool IsPartEquipped(int kind) => kind >= 0 && kind < 3 && (EquippedPartsMask & (1 << kind)) != 0;
+
+        public bool TogglePart(int kind)
+        {
+            if (!CanPurchase || kind < 0 || kind > 2 || (OwnedPartsMask & (1 << kind)) == 0) return false;
+            equippedPartsMask = EquippedPartsMask ^ (1 << kind);
+            SyncLegacyData(true);
+            RefreshPartEffects();
+            ReloadUI();
+            return true;
+        }
+
+        public bool ConsumeEmergencyPart()
+        {
+            if (!IsPartEquipped(0)) return false;
+            equippedPartsMask = EquippedPartsMask & ~1;
+            part1 = 0;
+            SyncLegacyData(false);
+            ReloadUI();
+            return true;
         }
 
         bool CanPurchase
@@ -106,7 +141,7 @@ namespace Jain
             get
             {
                 var game = Integration.IntegratedGame.Active;
-                return game == null || (game.shop == this && game.BetweenStages && !game.Ended && shopMenu != null && shopMenu.activeInHierarchy);
+                return game == null || (game.shop == this && game.ShopAccessible && !game.Ended && shopMenu != null && shopMenu.activeInHierarchy);
             }
         }
 
@@ -131,13 +166,16 @@ namespace Jain
             int owned = kind == 0 ? part1 : kind == 1 ? part2 : part3;
             int cost = Mathf.Max(0, partCost);
             if (owned > 0 || coin < cost) return false;
+            int equipped = EquippedPartsMask;
             coin -= cost;
             if (kind == 0) part1 = 1;
             else if (kind == 1) part2 = 1;
             else part3 = 1;
+            equippedPartsMask = equipped | (1 << kind);
             // Preserve the existing one-part purchase allowance per cleared stage.
             partLicense = 0;
             SyncLegacyData(true);
+            RefreshPartEffects();
             ReloadUI();
             return true;
         }
@@ -152,9 +190,32 @@ namespace Jain
             if (saveToDisk) manager.SaveData();
         }
 
+        void RefreshPartEffects()
+        {
+            var campaign = Integration.IntegratedGame.Active;
+            if (campaign != null && campaign.shop == this && campaign.player != null) campaign.player.RefreshPartEffects();
+        }
+
+        public void RefreshUI() => ReloadUI();
+
         void ReloadUI()
         {
             if (coinUI != null) coinUI.text = "남은 돈 : " + coin + "벨";
+            if (shopMenu == null) return;
+            // The original SF Button has a nested Background/Label Text. Match its
+            // serialized action so both existing columns retain their exact design.
+            foreach (var button in shopMenu.GetComponentsInChildren<Button>(true))
+                for (int action = 0; action < button.onClick.GetPersistentEventCount(); action++)
+                {
+                    if (button.onClick.GetPersistentTarget(action) != this) continue;
+                    string method = button.onClick.GetPersistentMethodName(action);
+                    int kind = method == nameof(LifeBtn) ? 0 : method == nameof(SpeedBtn) ? 1 : method == nameof(HpBtn) ? 2 : -1;
+                    if (kind < 0) continue;
+                    var label = button.GetComponentInChildren<Text>(true);
+                    if (label != null) label.text = PartNames[kind] + "\n" +
+                        ((OwnedPartsMask & (1 << kind)) == 0 ? Mathf.Max(0, partCost) + "벨 구매" : IsPartEquipped(kind) ? "장착 중 · 해제" : "미장착 · 장착");
+                    break;
+                }
         }
     }
 }

@@ -126,6 +126,30 @@ namespace Integration.Editor
             var narrative = O.FindAnyObjectByType<CampaignNarrative>();
             if (narrative != null) narrative.FinishOpening();
         }
+        static IEnumerator VerifyBossPatterns(CampaignBoss boss, IntegratedCombat player)
+        {
+            var names = new HashSet<string>();
+            for (int pattern = 0; pattern < 4; pattern++)
+            {
+                Rect bounds = BattleArena.PlayerBounds(Camera.main, 1.5f);
+                player.GetComponent<Rigidbody2D>().position = new Vector2(bounds.center.x, bounds.yMin + 1);
+                Physics2D.SyncTransforms();
+                typeof(CampaignBoss).GetMethod("BeginWarning", Private).Invoke(boss, null);
+                names.Add(boss.PatternName);
+                A(boss.IsWarning, "Boss pattern has an explicit warning " + boss.StageNumber + "/" + pattern);
+                typeof(CampaignBoss).GetMethod("BeginAttack", Private).Invoke(boss, null);
+                typeof(CampaignBoss).GetMethod("FireVolley", Private).Invoke(boss, null);
+                var shots = O.FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None);
+                if (!(boss.StageNumber == 1 && pattern == 2)) A(shots.Length > 0, "Boss dedicated barrage creates projectiles " + boss.StageNumber + "/" + pattern);
+                bool fixedHeadings = true;
+                foreach (var shot in shots) fixedHeadings &= typeof(EnemyProjectile).GetField("target", Private).GetValue(shot) == null && shot.rotationSpeed == 0;
+                A(fixedHeadings, "Boss barrage has no homing target " + boss.StageNumber + "/" + pattern);
+                typeof(CampaignBoss).GetMethod("ClearProjectiles", Private).Invoke(boss, null);
+                yield return null;
+            }
+            A(names.Count == 4, "Boss has four distinct dedicated attack patterns " + boss.StageNumber);
+            typeof(CampaignBoss).GetMethod("Recover", Private).Invoke(boss, null);
+        }
         static IEnumerator Check()
         {
             yield return null; yield return null;
@@ -147,13 +171,28 @@ namespace Integration.Editor
             player.movement.ApplyMovementInput(Vector2.zero);
             for (int i = 0; i < 15; i++) fixedMove.Invoke(player.movement, null);
             A(body.linearVelocity.sqrMagnitude < .001f, "Releasing movement stops smoothly");
+            game.TogglePause(); game.OpenShop();
+            A(game.ShopAccessible && !game.BetweenStages && game.shop.shopMenu.activeInHierarchy && Time.timeScale == 0,
+                "Existing shop opens while paused before any boss clear");
+            var cheats = game.GetComponent<CampaignCheats>();
+            A(cheats.CheatModeAvailable && !cheats.Allowed && cheats.ToggleDevelopmentMode(), "Development cheats default off and can be enabled explicitly");
+            int beforeMoney = game.shop.coin;
+            A(cheats.ExecuteCheat(3) && game.shop.coin == beforeMoney + cheats.moneyAmount, "Money cheat works inside the paused shop");
+            A(!cheats.ExecuteCheat(2), "Defeat-enemies cheat cannot bypass paused reward rules");
+            game.shop.coin = 2000;
+            A(game.shop.TryBuyPart(1) && game.shop.IsPartEquipped(1) && player.movement.speed == 7, "Pause-shop purchase immediately equips and applies turbo");
+            A(game.shop.TogglePart(1) && game.shop.part2 == 1 && player.movement.speed == 5, "Pause-shop unequip removes turbo without losing ownership");
+            A(!cheats.ToggleDevelopmentMode() && !game.RankedRun && IntegrationSaveStore.Data.checkpoint.practice, "Disabling cheats cannot restore ranking eligibility");
+            game.shop.part2 = 0; game.shop.equippedPartsMask = 0; game.shop.coin = 0;
+            game.CloseShop(); A(game.pausePanel.activeInHierarchy && !game.Running, "Closing pause shop returns to pause controls");
+            game.TogglePause(); A(game.Running, "Pause shop returns to gameplay");
             for (int kind = 0; kind < 4; kind++) A(!player.TryUsePatch(kind), "Zero-stock skill blocked " + kind);
             player.Fire(); player.TryBomb(); player.TrySkill(); yield return Wait(.2f);
             A(O.FindObjectsByType<PlayerShot>(FindObjectsSortMode.None).Length == 0 && player.shotsFired == 0, "Missile-lure game has no free player gun");
 
             var legacy = JsonUtility.FromJson<SaveFile>("{\"version\":1,\"checkpoint\":{\"stage\":2,\"coreHp\":99,\"selectedSkill\":0,\"pull\":2}}");
             typeof(IntegrationSaveStore).GetMethod("Validate", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { legacy });
-            A(legacy.version == 3 && legacy.checkpoint.coreHp == 8 && legacy.checkpoint.pull == 2 && legacy.checkpoint.patchSlot0 == -1, "Legacy checkpoint preserves inventory without requiring equipment");
+            A(legacy.version == 4 && legacy.checkpoint.coreHp == 8 && legacy.checkpoint.pull == 2 && legacy.checkpoint.patchSlot0 == -1, "Legacy checkpoint preserves inventory without requiring equipment");
             var owner = Enemy(game, 0, new Vector2(-6, 2));
             var target = Enemy(game, 1, new Vector2(-2, 2), game.director.enemyPrefabs[0].straightProjectile.enemyDamage);
             int money = game.shop.coin;
@@ -232,7 +271,7 @@ namespace Integration.Editor
             yield return Wait(3.1f);
             player.data.HaveShield = 0; drops.SpawnPickup(6, player.transform.position); yield return Wait(.1f);
             player.Hit(null, 1); A(player.Health == 5 && player.ShieldCount == 0, "Shield drop absorbs one hit and consumes one charge");
-            yield return Wait(.9f); player.data.PlayerHp = 1; game.shop.part1 = 1;
+            yield return Wait(.9f); player.data.PlayerHp = 1; game.shop.part1 = 1; game.shop.equippedPartsMask |= 1;
             player.Hit(null, 1); A(player.Health == 4 && game.shop.part1 == 0, "Emergency part prevents lethal damage exactly once");
             yield return Wait(1.6f); player.Hit(null, 1); A(player.Health == 3 && game.shop.part1 == 0, "Consumed emergency part does not trigger again");
             player.Heal(99);
@@ -265,13 +304,16 @@ namespace Integration.Editor
             A(game.shop.TryBuyPart(1) && game.shop.coin == 400 && game.shop.part2 == 1, "Engine purchase records ownership and price");
             A(!game.shop.TryBuyPart(1) && game.shop.coin == 400, "Duplicate part purchase cannot charge currency");
             A(!game.shop.TryBuySkill(3) && game.shop.coin == 400, "Insufficient funds cannot grant stock or spend currency");
+            A(game.shop.IsPartEquipped(1) && game.shop.TogglePart(1) && !game.shop.IsPartEquipped(1) && game.shop.part2 == 1,
+                "Owned engine can be unequipped without losing ownership or charging money");
+            A(game.shop.TogglePart(1) && game.shop.IsPartEquipped(1) && game.shop.coin == 400, "Engine can be equipped again without a purchase");
             game.ContinueAfterShop(); Quiet(game); yield return null;
             A(game.director.stageNumber == 2 && player.movement.speed == 7, "Shop continuation enters stage2 with functional turbo engine");
             for (int stage = 2; stage <= 3; stage++)
             {
                 game.director.stageNumber = stage;
                 player.data.PlayerHp = 6; player.data.HaveShield = 2;
-                game.shop.coin = 4321; game.shop.part1 = game.shop.part2 = game.shop.part3 = 1;
+                game.shop.coin = 4321; game.shop.part1 = game.shop.part2 = game.shop.part3 = 1; game.shop.equippedPartsMask = 5;
                 game.shop.pull = 3; game.shop.slow = 4; game.shop.reflex = 5; game.shop.stop = 6;
                 game.score.score = 9876; game.SaveCheckpoint(); IntegrationSaveStore.Reload();
                 var checkpoint = IntegrationSaveStore.Data.checkpoint;
@@ -282,6 +324,11 @@ namespace Integration.Editor
                 game.Restart(); yield return null; yield return null;
                 game = IntegratedGame.Active; player = game.player; Quiet(game);
                 A(game.Running && game.director.stageNumber == stage && player.Health == 6 && game.shop.coin == 4321 && game.shop.part2 == 1 && game.shop.part3 == 1 && player.PatchCount(0) == 3 && player.PatchCount(3) == 6 && player.ShieldCount == 2 && game.score.score == 9876, "Actual retry restores stage, parts, stock, score and money " + stage);
+                A(game.shop.EquippedPartsMask == 5 && !game.shop.IsPartEquipped(1) && game.shop.IsPartEquipped(2), "Retry preserves owned versus equipped parts " + stage);
+                game.OpenShop();
+                A(game.shop.TogglePart(2) && player.RamDamage == 20, "Unequipping owned armor removes its ram bonus " + stage);
+                A(game.shop.TogglePart(2) && player.RamDamage == 30, "Equipping armor restores its ram bonus " + stage);
+                game.CloseShop(); game.TogglePause();
             }
 
             // Start a fresh three-stage run. The harness supplies invulnerability and
@@ -303,7 +350,7 @@ namespace Integration.Editor
                 var boss = O.FindAnyObjectByType<CampaignBoss>();
                 if (boss != null && !boss.IsDefeated)
                 {
-                    seenBosses.Add(boss.StageNumber);
+                    if (seenBosses.Add(boss.StageNumber)) yield return VerifyBossPatterns(boss, player);
                     phaseTwo |= boss.StageNumber == 3 && boss.PhaseTwo;
                     player.GetComponent<Rigidbody2D>().position = boss.transform.position;
                 }
