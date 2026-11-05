@@ -22,7 +22,8 @@ namespace Integration
         public bool Won { get; private set; }
         public bool Ended => ended;
         float frozenUntil;
-        public bool EnemiesFrozen => Running && Time.time < frozenUntil;
+        public bool EnemiesFrozen => false; // Time stop affects missiles only.
+        public bool MissilesFrozen => Running && Time.time < frozenUntil;
         bool started, paused, ended, betweenStages;
 
         void Start()
@@ -38,7 +39,7 @@ namespace Integration
             RefreshCounters();
             StartGame();
         }
-        void Awake() { Active = this; Time.timeScale = 0; }
+        void Awake() { Active = this; Time.timeScale = 0; gameObject.AddComponent<CampaignTools>(); }
         void OnEnable() { EnemyShip.DestroyedByPlayer += Reward; }
         void OnDisable() { EnemyShip.DestroyedByPlayer -= Reward; }
         void OnDestroy() { if (Active == this) Active = null; Time.timeScale = 1; }
@@ -50,7 +51,7 @@ namespace Integration
             player.core.playerHp = 8;
             player.selectedSkill = -1;
             player.bombs = 0;
-            player.ownedMask = 0;
+            player.guideStock = 0; player.ownedMask = 0; player.equippedParts = 0;
             player.equippedPatches = new[] { -1, -1 };
             shop.coin = 0;
             shop.part1 = shop.part2 = shop.part3 = 0;
@@ -85,7 +86,7 @@ namespace Integration
             if (!started || ended || !betweenStages) return;
             Time.timeScale = 0;
             if (pausePanel != null) pausePanel.SetActive(false);
-            shop.shopMenu.SetActive(true);
+            shop.shopMenu.SetActive(false); // Responsive shop is rendered by DesignHud.
         }
         void Update()
         {
@@ -93,7 +94,7 @@ namespace Integration
             SyncPatchOwnership();
             if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
             if (hpUI != null) foreach (var ui in hpUI) if (ui != null) ui.ReloadUI();
-            if (status != null) status.text = $"Stage {director.stageNumber}/3   Wave {director.Wave}/5   {director.Elapsed:000}/300s   HP {player.data.PlayerHp}/8\nMove: WASD/Arrows | Patches: Q / E | Pause: Esc\nPatch stock: Black Hole {shop.pull} | Gravity {shop.slow} | Parry {shop.reflex} | Stop {shop.stop}";
+            if (status != null) status.text = $"Stage {director.stageNumber}/3   Wave {director.Wave}/5   {director.Elapsed:000}/300s   HP {player.data.PlayerHp}/8\nMove: WASD/Arrows | Skills: 1 / 2 / 3 / 4 / 5 | Pause: Esc\nPatch stock: Black Hole {shop.pull} | Gravity {shop.slow} | Parry {shop.reflex} | Stop {shop.stop}";
             if (Running && director.State == StageDirector.Phase.Clear)
             {
                 if (director.stageNumber == 3) End(true);
@@ -108,19 +109,33 @@ namespace Integration
             shop.partLicense = 1;
             if (pausePanel != null) pausePanel.SetActive(false);
             if (intermissionPanel != null) intermissionPanel.SetActive(true);
-            shop.shopMenu.SetActive(true);
+            shop.shopMenu.SetActive(false); // Responsive shop is rendered by DesignHud.
         }
         public void ContinueAfterShop()
         {
             if (!betweenStages || ended || director.State != StageDirector.Phase.Clear) return;
             shop.shopMenu.SetActive(false);
             if (intermissionPanel != null) intermissionPanel.SetActive(false);
+            foreach (var drop in FindObjectsByType<CampaignDrop>(FindObjectsSortMode.None)) Destroy(drop.gameObject);
+            foreach (var effect in FindObjectsByType<IntegratedSkillEffect>(FindObjectsSortMode.None)) Destroy(effect.gameObject);
             director.AdvanceToNextStage();
             betweenStages = false;
             paused = false;
             frozenUntil = 0;
             Time.timeScale = 1;
             SaveCheckpoint();
+        }
+        public bool TryBuyPart(int kind)
+        {
+            if (!betweenStages || ended || kind < 0 || kind > 2 || shop.coin < 1000) return false;
+            int owned = kind == 0 ? shop.part1 : kind == 1 ? shop.part2 : shop.part3;
+            if (owned > 0) return false;
+            shop.coin -= 1000;
+            if (kind == 0) shop.part1 = 1;
+            else if (kind == 1) shop.part2 = 1;
+            else shop.part3 = 1;
+            player.equippedParts |= 1 << kind;
+            return true;
         }
         // IntegratedCombat consumes stock and starts its cooldown exactly once.
         public bool TryTimeStop() => player != null && player.TryUsePatch(3);
@@ -134,6 +149,7 @@ namespace Integration
         {
             if (ended) return;
             Kills++; score.score += value; shop.coin += value;
+            CampaignDrop.Spawn(enemy.transform.position, Kills);
             score.scoreUI.text = "Score : " + score.score; shop.coinUI.text = "Coin : " + shop.coin;
             GameDataManager.instance.score = score.score; GameDataManager.instance.money = shop.coin;
         }
@@ -154,12 +170,20 @@ namespace Integration
             result.text = (win ? "CAMPAIGN CLEAR" : "GAME OVER") + "\nScore : " + score.score;
             resultPanel.SetActive(true);
             IntegrationSaveStore.RecordResult(score.score);
-            IntegrationSaveStore.ClearCheckpoint();
+            if (win) IntegrationSaveStore.ClearCheckpoint();
+            else { SaveCheckpoint(); IntegrationSaveStore.Data.checkpoint.coreHp = 8; IntegrationSaveStore.Save(); }
         }
         public void Restart()
         {
-            IntegrationSaveStore.ContinueRequested = false;
-            IntegrationSaveStore.ClearCheckpoint();
+            if (!Won)
+            {
+                // Restart the current stage, retaining current money, equipment and item stock.
+                SaveCheckpoint();
+                IntegrationSaveStore.Data.checkpoint.coreHp = 8;
+                IntegrationSaveStore.Save();
+                IntegrationSaveStore.ContinueRequested = true;
+            }
+            else { IntegrationSaveStore.ClearCheckpoint(); }
             Time.timeScale = 1;
             if (GameDataManager.instance != null) Destroy(GameDataManager.instance.gameObject);
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -178,6 +202,7 @@ namespace Integration
             var c = new Checkpoint { stage = director.stageNumber, coreHp = Mathf.Clamp(player.data.PlayerHp, 1, 8),
                 score = score.score, money = shop.coin, part1 = shop.part1, part2 = shop.part2, part3 = shop.part3,
                 stop = shop.stop, reflex = shop.reflex, pull = shop.pull, slow = shop.slow,
+                equippedParts = player.equippedParts, bombs = player.bombs, guide = player.guideStock,
                 ownedMask = player.ownedMask, patchSlot0 = player.equippedPatches[0], patchSlot1 = player.equippedPatches[1] };
             IntegrationSaveStore.Data.checkpoint = c;
             IntegrationSaveStore.Save();
@@ -193,7 +218,7 @@ namespace Integration
             shop.stop = c.stop; shop.reflex = c.reflex; shop.pull = c.pull; shop.slow = c.slow;
             shop.partLicense = 1;
             player.selectedSkill = -1;
-            player.bombs = 0;
+            player.guideStock = c.guide; player.bombs = c.bombs; player.equippedParts = c.equippedParts;
             player.ownedMask = c.ownedMask;
             player.equippedPatches = new[] { c.patchSlot0, c.patchSlot1 };
             if (hpUI != null) foreach (var ui in hpUI) if (ui != null) ui.ReloadUI();

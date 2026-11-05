@@ -167,14 +167,8 @@ namespace Taeyang
 
             direction.Normalize();
 
-            // 플레이어만 뒤로 튕김 (넉백 8)
-            if (combat.movement != null)
-            {
-                combat.movement.AddKnockback(-direction * 8f);
-            }
-
-            // 적에게만 데미지 적용
-            TakeDamage(combat.RamDamage, direction);
+            combat.Hit(GetComponent<Collider2D>(), 1);
+            PushBack(direction * 6f);
         }
 
 

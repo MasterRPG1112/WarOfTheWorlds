@@ -67,6 +67,7 @@ namespace Integration
                     canvas.worldCamera = camera;
                     canvas.planeDistance = Mathf.Max(camera.nearClipPlane + .5f, 1f);
                 }
+                foreach(var tools in UnityEngine.Object.FindObjectsByType<CampaignTools>(FindObjectsSortMode.None))tools.RefreshFog(width,height);
                 Canvas.ForceUpdateCanvases();
                 if (GraphicsSettings.currentRenderPipeline != null)
                 {
@@ -106,6 +107,7 @@ namespace Integration
                 }
                 camera.targetTexture = previousTarget;
                 camera.aspect = previousAspect;
+                foreach(var tools in UnityEngine.Object.FindObjectsByType<CampaignTools>(FindObjectsSortMode.None))tools.RefreshFog(Screen.width,Screen.height);
                 Canvas.ForceUpdateCanvases();
                 RenderTexture.active = previousActive;
                 if (target != null) RenderTexture.ReleaseTemporary(target);
