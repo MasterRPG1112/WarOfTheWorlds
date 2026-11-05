@@ -93,37 +93,37 @@ PASS Invulnerability cheat blocks actual damage
 PASS Invulnerability toggle restores damage
 PASS Money cheat grants configured amount
 PASS Kill cheat destroys active enemies through defeat pipeline
-PASS GPU capture hud-1920x1080 
-PASS GPU capture hud-1280x720 
-PASS GPU capture hud-1024x768 
-PASS GPU capture hud-2560x1080 
+PASS GPU capture hud-1920x1080
+PASS GPU capture hud-1280x720
+PASS GPU capture hud-1024x768
+PASS GPU capture hud-2560x1080
 PASS Game over keeps continuation checkpoint
 PASS Restart loads same stage, full HP, money, parts and skill stock
 PASS Stage 1 attaches real boss without test skip
 PASS Boss 1 fires stage attack pattern
 PASS Boss 1 immune to missiles
 PASS Boss 1 receives physical player ram damage
-PASS GPU capture boss-stage-1 
+PASS GPU capture boss-stage-1
 PASS Boss 1 death clears stage exactly through real pipeline
 PASS Clear opens between-stage shop 1
-PASS GPU capture shop-stage-1 
+PASS GPU capture shop-stage-1
 PASS Stage 2 attaches real boss without test skip
 PASS Boss 2 fires stage attack pattern
 PASS Boss 2 immune to missiles
 PASS Boss 2 receives physical player ram damage
-PASS GPU capture boss-stage-2 
+PASS GPU capture boss-stage-2
 PASS Boss 2 death clears stage exactly through real pipeline
 PASS Clear opens between-stage shop 2
-PASS GPU capture shop-stage-2 
+PASS GPU capture shop-stage-2
 PASS Stage 3 attaches real boss without test skip
 PASS Boss 3 fires stage attack pattern
 PASS Boss 3 immune to missiles
 PASS Boss 3 receives physical player ram damage
-PASS GPU capture boss-stage-3 
+PASS GPU capture boss-stage-3
 PASS Boss 3 death clears stage exactly through real pipeline
 PASS Final boss ends campaign and clears checkpoint
 PASS Opening appears before menu interaction on first launch
-PASS GPU capture opening 
+PASS GPU capture opening
 PASS Opening skip returns to usable original menu
 PASS No game runtime errors
 Assertions passed=128; runtime errors=0
