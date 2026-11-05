@@ -1,0 +1,157 @@
+{
+  "author": "Kenney Vleugels (Kenney.nl)",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "retrieved": "2026-11-05",
+  "sources": [
+    "https://kenney.nl/assets/space-shooter-extension",
+    "https://kenney.nl/assets/space-shooter-remastered",
+    "https://kenney.nl/assets/particle-pack"
+  ],
+  "files": [
+    {
+      "resource": "CampaignArt/boss-stage1",
+      "sourcePack": "space-shooter-extension",
+      "sourceFile": "PNG/Sprites/Ships/spaceShips_001.png",
+      "sha256": "7b910d4e762fc397dfc32a1ef1903c4a10b455b9b4bf17cb107f6541edca0245",
+      "width": 106,
+      "height": 80
+    },
+    {
+      "resource": "CampaignArt/boss-stage2",
+      "sourcePack": "space-shooter-extension",
+      "sourceFile": "PNG/Sprites/Ships/spaceShips_005.png",
+      "sha256": "f29e704f0e4a44c5ac2bd2a5eff5a33bca18042c089de13dd2fc073cabacbcc7",
+      "width": 136,
+      "height": 84
+    },
+    {
+      "resource": "CampaignArt/boss-stage3",
+      "sourcePack": "space-shooter-extension",
+      "sourceFile": "PNG/Sprites/Ships/spaceShips_007.png",
+      "sha256": "6f90dfb93696479f1f42492ef8812ea2299ca2ca30c73bbbb956c9e23280c4fb",
+      "width": 172,
+      "height": 151
+    },
+    {
+      "resource": "CampaignArt/meteor-a",
+      "sourcePack": "space-shooter-extension",
+      "sourceFile": "PNG/Sprites/Meteors/spaceMeteors_001.png",
+      "sha256": "14dd2f3961f327cd16665111b7e840bc39270809b96fc9a28e74d11500869936",
+      "width": 215,
+      "height": 211
+    },
+    {
+      "resource": "CampaignArt/meteor-b",
+      "sourcePack": "space-shooter-extension",
+      "sourceFile": "PNG/Sprites/Meteors/spaceMeteors_004.png",
+      "sha256": "a953bbf27ff17ace0a02b2c38c4a9e2e0695f9344298082de7f6f48ead4d55b0",
+      "width": 220,
+      "height": 221
+    },
+    {
+      "resource": "CampaignArt/boss-missile",
+      "sourcePack": "space-shooter-extension",
+      "sourceFile": "PNG/Sprites/Missiles/spaceMissiles_001.png",
+      "sha256": "f08688ae57cadddf38ef778bcf3b955bb6f86d5d2ef03158f506fcc4f6ee60f9",
+      "width": 20,
+      "height": 35
+    },
+    {
+      "resource": "CampaignArt/boss-bullet",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Lasers/laserRed01.png",
+      "sha256": "9a16f8771d766f262c51b694b92ab2748aa744312f70af114ea8ea859166d3fb",
+      "width": 9,
+      "height": 54
+    },
+    {
+      "resource": "CampaignArt/drop-blackhole",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/powerupBlue_star.png",
+      "sha256": "c2be916c7391b79a46382b02937a351de8a310ede5c6b18b1a12b625933a685c",
+      "width": 34,
+      "height": 33
+    },
+    {
+      "resource": "CampaignArt/drop-slow",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/powerupGreen_star.png",
+      "sha256": "ddacc3e04265b3c9b39c31b45ef55e244b10657ef316a85017a1635ebc727b23",
+      "width": 34,
+      "height": 33
+    },
+    {
+      "resource": "CampaignArt/drop-reflect",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/powerupRed_shield.png",
+      "sha256": "9c8645c835476d1e798277b22c24d4c59cb00c095ca13fc46ca2be7d3b6ea40e",
+      "width": 34,
+      "height": 33
+    },
+    {
+      "resource": "CampaignArt/drop-time",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/powerupYellow_star.png",
+      "sha256": "9d14ae684ec7905f786372a86f74b14c96495224454133fca23feedd4d6a1edd",
+      "width": 34,
+      "height": 33
+    },
+    {
+      "resource": "CampaignArt/drop-heal",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/pill_green.png",
+      "sha256": "8477243312c21d6794944fb754ab82290f901a73de4005f84515e44a981f002d",
+      "width": 22,
+      "height": 21
+    },
+    {
+      "resource": "CampaignArt/drop-invulnerable",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/powerupYellow_bolt.png",
+      "sha256": "d8668d23ec368a0c8bc07620304fee8b9ed0a8ac47f24cd2c249ae9ab2283c92",
+      "width": 34,
+      "height": 33
+    },
+    {
+      "resource": "CampaignArt/drop-shield",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/Power-ups/powerupBlue_shield.png",
+      "sha256": "1e5ba2c4df6d56ca0fb46bde94324d4902c9dbbd03f53dc04a018f52306f7f10",
+      "width": 34,
+      "height": 33
+    },
+    {
+      "resource": "CampaignArt/opening-ship",
+      "sourcePack": "space-shooter-remastered",
+      "sourceFile": "PNG/playerShip3_blue.png",
+      "sha256": "a648a59fe9f0b1e3ba98bda9374d4bc1ef17793d69dfe42b3d4e1b09e25afa63",
+      "width": 98,
+      "height": 75
+    },
+    {
+      "resource": "CampaignArt/explosion",
+      "sourcePack": "particle-pack",
+      "sourceFile": "PNG (Transparent)/fire_01.png",
+      "sha256": "9727a9743ac6ab8dd4dd79f5fc5b0266290efae45f4d4452279eb5e4bcf3a978",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "resource": "CampaignArt/nebula-smoke",
+      "sourcePack": "particle-pack",
+      "sourceFile": "PNG (Transparent)/smoke_01.png",
+      "sha256": "e8724c219e8d35859167fc0a7e207e13c72ccf0c29704909b9bb3d3dc71c6cf7",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "resource": "CampaignArt/engine-glow",
+      "sourcePack": "particle-pack",
+      "sourceFile": "PNG (Transparent)/light_01.png",
+      "sha256": "caedcc5df5bcac4470244d2520d6a64b45b20c1ccf4d918da516c55e3fa365a6",
+      "width": 512,
+      "height": 512
+    }
+  ]
+}

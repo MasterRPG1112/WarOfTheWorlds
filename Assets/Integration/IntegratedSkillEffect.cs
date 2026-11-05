@@ -7,8 +7,12 @@ namespace Integration
     public class IntegratedSkillEffect : MonoBehaviour
     {
         readonly HashSet<EnemyProjectile> slowed = new HashSet<EnemyProjectile>();
+        readonly List<EnemyProjectile> leaving = new List<EnemyProjectile>();
         public IntegratedCombat owner;
         public int kind;
+        [Min(.05f)] public float duration = 3;
+        [Min(.1f)] public float radius = 2.2f;
+        [Range(.05f, 1)] public float slowFactor = .3f;
         float age;
 
         void Update()
@@ -17,13 +21,24 @@ namespace Integration
             var game = IntegratedGame.Active;
             if (game != null && !game.Running) return;
             age += Time.deltaTime;
-            if (age >= (kind == 0 ? 3 : kind == 1 ? 5 : .125f)) { ReleaseSlow(); Destroy(gameObject); return; }
+            if (age >= duration) { ReleaseSlow(); Destroy(gameObject); return; }
             if (kind != 0) transform.position = owner.transform.position;
-            float radius = kind == 2 ? 1.3f : 2.2f;
+            if (kind == 1)
+            {
+                leaving.Clear();
+                foreach (var bullet in slowed)
+                    if (bullet == null || (bullet.transform.position - transform.position).sqrMagnitude > radius * radius)
+                        leaving.Add(bullet);
+                foreach (var bullet in leaving)
+                {
+                    if (bullet != null) bullet.RemoveSlow(this);
+                    slowed.Remove(bullet);
+                }
+            }
             foreach (var bullet in FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None))
             {
                 if ((bullet.transform.position - transform.position).sqrMagnitude > radius * radius) continue;
-                if (kind == 1) { bullet.SetSlow(this, .3f); slowed.Add(bullet); }
+                if (kind == 1) { bullet.SetSlow(this, slowFactor); slowed.Add(bullet); }
                 else if (kind == 0) bullet.Absorb();
                 else if (!bullet.Reflected)
                 {

@@ -18,12 +18,17 @@ namespace Integration
         public Text status, result;
         public bool Running => started && !paused && !ended && !betweenStages;
         public bool BetweenStages => betweenStages;
+        public bool HasStarted => started;
         public int Kills { get; private set; }
         public bool Won { get; private set; }
         public bool Ended => ended;
+        public bool RankedRun { get; private set; } = true;
+        public bool ResultSubmitted { get; private set; }
+        CampaignNarrative narrative;
         float frozenUntil;
         public bool EnemiesFrozen => Running && Time.time < frozenUntil;
         bool started, paused, ended, betweenStages;
+        int startFrame;
 
         void Start()
         {
@@ -36,8 +41,13 @@ namespace Integration
                 InitializeNewRun();
             IntegrationSaveStore.ContinueRequested = false;
             RefreshCounters();
-            StartGame();
+            narrative = GetComponent<CampaignNarrative>();
+            if (narrative == null) narrative = gameObject.AddComponent<CampaignNarrative>();
+            if (GetComponent<CampaignCheats>() == null) gameObject.AddComponent<CampaignCheats>();
+            if (director.stageNumber == 1 && !loadingCheckpoint) narrative.PlayOpening(this);
+            else StartGame();
         }
+        bool loadingCheckpoint;
         void Awake() { Active = this; Time.timeScale = 0; }
         void OnEnable() { EnemyShip.DestroyedByPlayer += Reward; }
         void OnDisable() { EnemyShip.DestroyedByPlayer -= Reward; }
@@ -48,6 +58,8 @@ namespace Integration
             director.stageNumber = 1;
             player.data.PlayerHp = 8;
             player.core.playerHp = 8;
+            player.data.HaveShield = 0;
+            player.data.Invin = false;
             player.selectedSkill = -1;
             player.bombs = 0;
             player.ownedMask = 0;
@@ -64,6 +76,7 @@ namespace Integration
         {
             if (started || ended) return;
             started = true;
+            startFrame = Time.frameCount;
             paused = false;
             betweenStages = false;
             if (selectionPanel != null) selectionPanel.SetActive(false);
@@ -91,9 +104,9 @@ namespace Integration
         {
             if (!started || ended) return;
             SyncPatchOwnership();
-            if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
+            if (Time.frameCount > startFrame && Input.GetKeyDown(KeyCode.Escape)) TogglePause();
             if (hpUI != null) foreach (var ui in hpUI) if (ui != null) ui.ReloadUI();
-            if (status != null) status.text = $"Stage {director.stageNumber}/3   Wave {director.Wave}/5   {director.Elapsed:000}/300s   HP {player.data.PlayerHp}/8\nMove: WASD/Arrows | Patches: Q / E | Pause: Esc\nPatch stock: Black Hole {shop.pull} | Gravity {shop.slow} | Parry {shop.reflex} | Stop {shop.stop}";
+            if (status != null) status.text = $"Stage {director.stageNumber}/3   Wave {director.Wave}/5   {director.Elapsed:000}/300s   HP {player.data.PlayerHp}/8\nMove: WASD/Arrows | Skills: B / V / R / T | Inventory: P | Pause: Esc\nStock: Black Hole {shop.pull} | Slow {shop.slow} | Reflect {shop.reflex} | Stop {shop.stop}";
             if (Running && director.State == StageDirector.Phase.Clear)
             {
                 if (director.stageNumber == 3) End(true);
@@ -116,6 +129,7 @@ namespace Integration
             shop.shopMenu.SetActive(false);
             if (intermissionPanel != null) intermissionPanel.SetActive(false);
             director.AdvanceToNextStage();
+            player.GetComponent<CampaignDrops>()?.ClearPickups();
             betweenStages = false;
             paused = false;
             frozenUntil = 0;
@@ -124,15 +138,15 @@ namespace Integration
         }
         // IntegratedCombat consumes stock and starts its cooldown exactly once.
         public bool TryTimeStop() => player != null && player.TryUsePatch(3);
-        public bool ActivateTimeStop()
+        public bool ActivateTimeStop(float duration = 3)
         {
             if (!Running) return false;
-            frozenUntil = Time.time + 3;
+            frozenUntil = Time.time + Mathf.Max(.1f, duration);
             return true;
         }
         void Reward(EnemyShip enemy, int value)
         {
-            if (ended) return;
+            if (ended || !Running) return;
             Kills++; score.score += value; shop.coin += value;
             score.scoreUI.text = "Score : " + score.score; shop.coinUI.text = "Coin : " + shop.coin;
             GameDataManager.instance.score = score.score; GameDataManager.instance.money = shop.coin;
@@ -148,27 +162,57 @@ namespace Integration
         public void End(bool win)
         {
             if (ended) return;
+            if (win && (director.stageNumber != 3 || director.State != StageDirector.Phase.Clear)) return;
             ended = true; Won = win; Time.timeScale = 0;
             director.enabled = false; player.movement.enabled = false;
             player.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
-            result.text = (win ? "CAMPAIGN CLEAR" : "GAME OVER") + "\nScore : " + score.score;
+            result.text = (win ? "CAMPAIGN CLEAR" : "GAME OVER · STAGE " + director.stageNumber) + " · " + score.score + "점" +
+                (win ? "" : "\n다시하기: 스테이지 시작점 복원");
             resultPanel.SetActive(true);
-            IntegrationSaveStore.RecordResult(score.score);
-            IntegrationSaveStore.ClearCheckpoint();
+            if (win)
+            {
+                IntegrationSaveStore.ClearCheckpoint();
+                narrative.ShowEnding(this);
+            }
+        }
+        public void MarkPracticeRun()
+        {
+            RankedRun = false;
+            if (IntegrationSaveStore.HasCheckpoint)
+            {
+                IntegrationSaveStore.Data.checkpoint.practice = true;
+                IntegrationSaveStore.Save();
+            }
+        }
+        public bool SubmitVictory(string playerId)
+        {
+            if (!ended || !Won || ResultSubmitted || !RankedRun) return false;
+            IntegrationSaveStore.RecordResult(score.score, playerId);
+            ResultSubmitted = true;
+            return true;
         }
         public void Restart()
         {
-            IntegrationSaveStore.ContinueRequested = false;
-            IntegrationSaveStore.ClearCheckpoint();
+            // Death retries the current stage-start snapshot, including purchases
+            // made before entering that stage. Mid-stage spending/drops roll back.
+            IntegrationSaveStore.ContinueRequested = !Won && IntegrationSaveStore.HasCheckpoint;
             Time.timeScale = 1;
-            if (GameDataManager.instance != null) Destroy(GameDataManager.instance.gameObject);
+            ReleaseSessionData();
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
         public void BackToMenu()
         {
             Time.timeScale = 1;
-            if (GameDataManager.instance != null) Destroy(GameDataManager.instance.gameObject);
+            ReleaseSessionData();
             SceneManager.LoadScene("MainMenu");
+        }
+        public static void ReleaseSessionData()
+        {
+            // Clear the singleton before deferred destruction so the next scene's
+            // Awake cannot reject its own session manager as a duplicate.
+            var previous = GameDataManager.instance;
+            GameDataManager.instance = null;
+            if (previous != null) Destroy(previous.gameObject);
         }
         public void SaveCheckpoint()
         {
@@ -178,13 +222,15 @@ namespace Integration
             var c = new Checkpoint { stage = director.stageNumber, coreHp = Mathf.Clamp(player.data.PlayerHp, 1, 8),
                 score = score.score, money = shop.coin, part1 = shop.part1, part2 = shop.part2, part3 = shop.part3,
                 stop = shop.stop, reflex = shop.reflex, pull = shop.pull, slow = shop.slow,
-                ownedMask = player.ownedMask, patchSlot0 = player.equippedPatches[0], patchSlot1 = player.equippedPatches[1] };
+                ownedMask = player.ownedMask, shields = player.data.HaveShield, practice = !RankedRun };
             IntegrationSaveStore.Data.checkpoint = c;
             IntegrationSaveStore.Save();
         }
         void RestoreCheckpoint(Checkpoint c)
         {
+            loadingCheckpoint = true;
             director.stageNumber = c.stage;
+            RankedRun = !c.practice;
             player.data.PlayerHp = Mathf.Clamp(c.coreHp, 1, 8);
             player.core.playerHp = player.data.PlayerHp;
             EnablePlayerColliders();
@@ -196,6 +242,7 @@ namespace Integration
             player.bombs = 0;
             player.ownedMask = c.ownedMask;
             player.equippedPatches = new[] { c.patchSlot0, c.patchSlot1 };
+            player.data.HaveShield = Mathf.Clamp(c.shields, 0, player.maxShields);
             if (hpUI != null) foreach (var ui in hpUI) if (ui != null) ui.ReloadUI();
         }
         void EnablePlayerColliders()
@@ -215,6 +262,8 @@ namespace Integration
         {
             score.scoreUI.text = "Score : " + score.score;
             shop.coinUI.text = "남은 돈 : " + shop.coin + "벨";
+            shop.SyncLegacyData(false);
+            if (GameDataManager.instance != null) GameDataManager.instance.score = score.score;
         }
     }
 }

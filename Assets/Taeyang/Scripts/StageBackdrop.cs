@@ -24,7 +24,9 @@ namespace Taeyang
         }
         public void Initialize(int stage, bool expanded = false)
         {
-            if(Camera.main != null) Camera.main.backgroundColor=stage==1 ? new Color(.06f,.025f,.015f) : stage==2 ? new Color(.012f,.005f,.035f) : new Color(.015f,.07f,.13f);
+            if(Camera.main != null) Camera.main.backgroundColor=stage==1 ? new Color(.06f,.025f,.015f) : stage==2 ? new Color(.012f,.005f,.035f) : new Color(.045f,.018f,.085f);
+            if(stage == 3 && Integration.IntegratedGame.Active != null && GetComponent<Integration.StageVision>() == null)
+                gameObject.AddComponent<Integration.StageVision>();
             if (expanded)
             {
                 Rect view = Integration.BattleArena.ViewBounds();

@@ -23,6 +23,8 @@ namespace Integration
         public int reflex;
         public int pull;
         public int slow;
+        public int shields;
+        public bool practice;
         // Retained solely so v1 JSON and older Editor sources remain readable.
         public int selectedSkill = -1;
         public int ownedMask;
@@ -33,7 +35,7 @@ namespace Integration
     [Serializable]
     public class SaveFile
     {
-        public int version = 2;
+        public int version = 3;
         public Checkpoint checkpoint;
         public List<GameDataManager.RankData> ranks = new List<GameDataManager.RankData>();
         public float volume = 1;
@@ -90,7 +92,7 @@ namespace Integration
                 if (json.Length < 2 || json[0] != '{' || json[json.Length - 1] != '}')
                     throw new FormatException("The save is not a JSON object.");
                 SaveFile loaded = JsonUtility.FromJson<SaveFile>(json);
-                if (loaded == null || (loaded.version != 1 && loaded.version != 2))
+                if (loaded == null || loaded.version < 1 || loaded.version > 3)
                     throw new FormatException("The save version is unsupported.");
                 rejectedDiskFile = !Validate(loaded);
                 data = loaded;
@@ -147,9 +149,9 @@ namespace Integration
             Save();
         }
 
-        public static void RecordResult(int score)
+        public static void RecordResult(int score, string playerId = "Player")
         {
-            Data.ranks.Add(new GameDataManager.RankData("Player", Mathf.Max(0, score)));
+            Data.ranks.Add(new GameDataManager.RankData(CampaignRules.NormalizePlayerId(playerId), Mathf.Max(0, score)));
             Validate(Data);
             Save();
         }
@@ -210,6 +212,7 @@ namespace Integration
                     checkpoint.reflex = Mathf.Max(0, checkpoint.reflex);
                     checkpoint.pull = Mathf.Max(0, checkpoint.pull);
                     checkpoint.slow = Mathf.Max(0, checkpoint.slow);
+                    checkpoint.shields = Mathf.Clamp(checkpoint.shields, 0, 9);
                     // v1 had no equipment slots. Ignore default zero slot values
                     // from absent JSON fields rather than granting a free patch.
                     if (save.version == 1)
@@ -231,19 +234,17 @@ namespace Integration
                     if (checkpoint.patchSlot1 >= 0 && (checkpoint.ownedMask & (1 << checkpoint.patchSlot1)) == 0) checkpoint.patchSlot1 = -1;
                 }
             }
-            save.version = 2;
+            save.version = 3;
             save.volume = float.IsNaN(save.volume) || float.IsInfinity(save.volume) ? 1 : Mathf.Clamp01(save.volume);
             if (save.ranks == null) save.ranks = new List<GameDataManager.RankData>();
             for (int index = 0; index < save.ranks.Count; index++)
             {
                 GameDataManager.RankData rank = save.ranks[index];
                 rank.stageScore = Mathf.Max(0, rank.stageScore);
-                rank.playerName = string.IsNullOrWhiteSpace(rank.playerName) ? "Player" : rank.playerName.Trim();
-                if (rank.playerName.Length > 128) rank.playerName = rank.playerName.Substring(0, 128);
+                rank.playerName = CampaignRules.NormalizePlayerId(rank.playerName);
                 save.ranks[index] = rank;
             }
-            save.ranks.Sort((left, right) => right.stageScore.CompareTo(left.stageScore));
-            if (save.ranks.Count > 10) save.ranks.RemoveRange(10, save.ranks.Count - 10);
+            CampaignRules.SortRanks(save.ranks);
             return validCheckpoint;
         }
 

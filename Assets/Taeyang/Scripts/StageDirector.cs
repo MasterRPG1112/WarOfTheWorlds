@@ -42,6 +42,12 @@ namespace Taeyang
         private void Start()
         {
             stageNumber = Mathf.Clamp(stageNumber,1,3);
+            if (Integration.IntegratedGame.Active != null)
+            {
+                // Authored UI scenes can retain old prototype flags without bypassing bosses.
+                noBossCampaign = false;
+                allowMissingBossTestSkip = false;
+            }
             if(enemyPrefabs == null || enemyPrefabs.Length != 5 || Array.Exists(enemyPrefabs,p => p == null))
             { Debug.LogError("Stage requires all five Taeyang enemy prefabs",this); enabled=false; return; }
             backdrop = new GameObject("Stage environment").AddComponent<StageBackdrop>();
@@ -57,8 +63,8 @@ namespace Taeyang
                 {
                     SpawnFormation(); nextSpawn += SpawnInterval;
                 }
-                if(Elapsed >= nextObstacle && Elapsed < Duration)
-                { SpawnObstacle(); nextObstacle += stageNumber == 1 ? 7 : stageNumber == 2 ? 6 : 5; }
+                if(stageNumber >= 2 && Elapsed >= nextObstacle && Elapsed < Duration)
+                { SpawnObstacle(); nextObstacle += stageNumber == 2 ? 6 : 5; }
                 if(Elapsed >= Duration) State = Phase.Clearing;
             }
             if(State == Phase.Clearing && FindObjectsByType<EnemyShip>(FindObjectsSortMode.None).Length == 0)
@@ -69,6 +75,8 @@ namespace Taeyang
                 State = Phase.AwaitingBoss;
                 bossRequested.Invoke();
                 if(CurrentBoss != null && State == Phase.AwaitingBoss) AttachBoss(Instantiate(CurrentBoss,bossPosition,Quaternion.identity));
+                else if(CurrentBoss == null && State == Phase.AwaitingBoss && Integration.IntegratedGame.Active != null)
+                    AttachBoss(Integration.CampaignBoss.Create(this).gameObject);
                 else if (CurrentBoss == null && allowMissingBossTestSkip && State == Phase.AwaitingBoss)
                     SkipMissingBossForTesting();
             }
@@ -98,7 +106,8 @@ namespace Taeyang
         }
         private void SpawnObstacle()
         {
-            var go = new GameObject(stageNumber == 3 ? "Ice meteor" : stageNumber == 2 ? "Drifting wreck" : "Asteroid");
+            if (stageNumber < 2) return;
+            var go = new GameObject(stageNumber == 3 ? "Nebula meteor" : "Drifting meteor");
             if (perimeterSpawns)
             {
                 Rect view = Integration.BattleArena.ViewBounds();
@@ -131,6 +140,7 @@ namespace Taeyang
             foreach(var p in FindObjectsByType<EnemyProjectile>(FindObjectsSortMode.None)) Destroy(p.gameObject);
             foreach(var p in FindObjectsByType<StageObstacle>(FindObjectsSortMode.None)) Destroy(p.gameObject);
             if(backdrop != null) Destroy(backdrop.gameObject);
+            if(boss != null) Destroy(boss);
             bossPrefab=null; stageNumber++; Elapsed=0; SpawnTicks=0; LastSpawnDirection=-1; nextObstacle=7; boss=null; bossWasAttached=false;
             State=Phase.Survival; Start();
         }

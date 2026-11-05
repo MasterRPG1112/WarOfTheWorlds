@@ -13,7 +13,9 @@ namespace Integration
         Text[] slots = new Text[2], rows = new Text[4];
         Button[] use = new Button[2];
         GameObject patchPanel;
+        bool resumeAfterPatches;
         static readonly string[] Names = { "블랙홀", "감속장", "공격 반사", "시간 정지" };
+        static readonly string[] Keys = { "B", "V", "R", "T" };
         void Start()
         {
             // 화면 해상도 변화 및 모서리 밀착에 가장 안정적인 Overlay 모드 사용
@@ -55,57 +57,79 @@ namespace Integration
             // 5. 하단 Q / E 패치 슬롯 버튼 (하단 중앙 양옆)
             for (int i = 0; i < 2; i++)
             {
-                int slot = i;
-                var b = MakeButton(transform, "슬롯 " + (i + 1), new Vector2(i == 0 ? -180 : 180, 40), new Vector2(320, 70), () => game.player.TryUsePatch(game.player.equippedPatches[slot]));
+                var b = MakeButton(transform, "스킬 수량 " + (i + 1), new Vector2(i == 0 ? -180 : 180, 40), new Vector2(320, 70), OpenPatches);
                 var rt = b.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(.5f, 0); use[i] = b; slots[i] = b.GetComponentInChildren<Text>();
             }
 
             // 6. 패치 장착 버튼 (P) (우측 하단 모서리 밀착)
-            var manage = MakeButton(transform, "패치 장착 (P)", new Vector2(-30, 40), new Vector2(210, 55), OpenPatches);
+            var manage = MakeButton(transform, "보유 스킬 (P)", new Vector2(-30, 40), new Vector2(210, 55), OpenPatches);
             manage.GetComponent<RectTransform>().anchorMin = manage.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0);
 
             // 7. 조작 설명 (좌측 하단 모서리 밀착)
             var help = Label(transform, "조작", new Vector2(310, 55), new Vector2(30, 40), 15);
             help.rectTransform.anchorMin = help.rectTransform.anchorMax = new Vector2(0, 0);
-            help.text = "WASD / 방향키 이동 · 적 미사일 유도\nQ / E 장착 패치 · Esc 일시정지";
+            help.text = "WASD / 방향키 · 미사일 유도\nB / V / R / T 스킬 · P 보유량 · Esc 정지";
             // -------------------------------------------------------------
 
             patchPanel = Box(transform, "패치 장착", new Vector2(.5f, .5f), new Vector2(.5f, .5f), new Vector2(1000, 570), Vector2.zero);
-            Label(patchPanel.transform, "제목", new Vector2(900, 60), new Vector2(0, 225), 28).text = "보유 패치 장착 · 최대 2개";
+            Label(patchPanel.transform, "제목", new Vector2(900, 60), new Vector2(0, 225), 28).text = "보유 스킬 · 종류별 수량 / 독립 쿨타임";
             for (int i = 0; i < 4; i++)
             {
                 int kind = i; rows[i] = Label(patchPanel.transform, Names[i], new Vector2(480, 65), new Vector2(-210, 135 - i * 85), 23);
-                for (int j = 0; j < 2; j++) { int slot = j; MakeButton(patchPanel.transform, "슬롯 " + (j + 1), new Vector2(170 + j * 205, 135 - i * 85), new Vector2(185, 60), () => game.player.EquipPatch(kind, slot)); }
+                for (int j = 0; j < 2; j++) MakeButton(patchPanel.transform, j == 0 ? Keys[kind] + " 사용" : "단축키 " + Keys[kind], new Vector2(170 + j * 205, 135 - i * 85), new Vector2(185, 60), () => UseFromInventory(kind));
             }
             MakeButton(patchPanel.transform, "뒤로", new Vector2(0, -215), new Vector2(400, 60), ClosePatches);
             patchPanel.SetActive(false);
         }
         public void OpenPatches()
         {
-            if (game.Ended) return;
-            if (game.Running) game.TogglePause();
+            if (patchPanel.activeSelf) { ClosePatches(); return; }
+            if (game.Ended || (!game.Running && !game.BetweenStages && !game.HasStarted)) return;
+            resumeAfterPatches = game.Running;
+            if (resumeAfterPatches) game.TogglePause();
             game.pausePanel.SetActive(false); patchPanel.SetActive(true);
         }
-        public void ClosePatches() { patchPanel.SetActive(false); if (!game.BetweenStages && !game.Ended) game.pausePanel.SetActive(true); }
+        public void ClosePatches()
+        {
+            patchPanel.SetActive(false);
+            if (game.BetweenStages || game.Ended) return;
+            if (resumeAfterPatches && !game.Running) game.TogglePause();
+            else if (!game.Running) game.pausePanel.SetActive(true);
+        }
+        void UseFromInventory(int kind)
+        {
+            if (game.BetweenStages || game.Ended || game.player.PatchCount(kind) <= 0 || game.player.PatchCooldown(kind) > 0) return;
+            resumeAfterPatches = true;
+            ClosePatches();
+            game.player.TryUsePatch(kind);
+        }
         void Update()
         {
             if (healthText == null || game.player == null) return;
+            if (Input.GetKeyDown(KeyCode.P)) { if (patchPanel.activeSelf) ClosePatches(); else OpenPatches(); }
             if (game.Running && patchPanel.activeSelf) patchPanel.SetActive(false);
             healthText.text = "HP " + game.player.Health + " / 8"; healthFill.fillAmount = game.player.Health / 8f;
             healthFill.rectTransform.sizeDelta = new Vector2(250 * game.player.Health / 8f, 18);
             stageText.text = "STAGE " + game.director.stageNumber + " / 3  WAVE " + game.director.Wave + " / 5\n생존 " + game.director.Elapsed.ToString("000") + " / 300초" + (game.BetweenStages ? " · 스테이지 클리어 / 상점" : "");
             if (game.director.allowMissingBossTestSkip && game.director.bossPrefab == null &&
                 (game.director.campaignBossPrefabs == null || game.director.campaignBossPrefabs.Length < game.director.stageNumber || game.director.campaignBossPrefabs[game.director.stageNumber - 1] == null)) stageText.text += "\n보스 미등록 · 테스트 진행 경로";
-            scoreText.text = "점수 " + game.score.score + "  |  재화 " + game.shop.coin;
-            var boss = FindAnyObjectByType<IntegratedBossTarget>(); bossText.text = boss == null ? "" : "BOSS HP " + boss.CurrentHealth + " / " + boss.MaxHealth;
+            scoreText.text = "점수 " + game.score.score + "  |  재화 " + game.shop.coin + "\n보호막 " + game.player.ShieldCount + (game.RankedRun ? "" : " · 테스트");
+            var boss = FindAnyObjectByType<IntegratedBossTarget>();
+            bossText.text = boss == null ? "" : "BOSS HP " + boss.CurrentHealth + " / " + boss.MaxHealth;
+            var campaignBoss = boss as CampaignBoss;
+            if (campaignBoss != null)
+                bossText.text = campaignBoss.IsWarning ? campaignBoss.PatternName + " 예고 · " + boss.CurrentHealth + "/" + boss.MaxHealth :
+                    bossText.text + (campaignBoss.PhaseTwo ? " · 2페이즈" : "");
             for (int i = 0; i < 2; i++)
             {
-                int k = game.player.equippedPatches[i];
-                slots[i].text = (i == 0 ? "Q" : "E") + " · " + (k < 0 ? "미장착" : Names[k] + " ×" + game.player.PatchCount(k) + "\n" + (game.player.PatchCooldown(k) > 0 ? game.player.PatchCooldown(k).ToString("0.0") + "초" : "사용 가능"));
-                use[i].interactable = game.Running && k >= 0 && game.player.PatchCount(k) > 0 && game.player.PatchCooldown(k) <= 0;
+                int k = i * 2;
+                slots[i].text = SkillLabel(k) + "\n" + SkillLabel(k + 1);
+                use[i].interactable = game.HasStarted && !game.Ended;
             }
-            for (int k = 0; k < 4; k++) rows[k].text = Names[k] + " ×" + game.player.PatchCount(k) + "  쿨타임 " + game.player.PatchCooldown(k).ToString("0.0") + "초" + (game.player.IsEquipped(k) ? " (장착)" : "");
+            for (int k = 0; k < 4; k++) rows[k].text = SkillLabel(k);
         }
+        string SkillLabel(int kind) => Keys[kind] + " · " + Names[kind] + " ×" + game.player.PatchCount(kind) +
+            (game.player.PatchCooldown(kind) > 0 ? "  " + game.player.PatchCooldown(kind).ToString("0.0") + "초" : "");
         void OnGUI()
         {
             if (Camera.main == null || game == null || !game.Running) return;

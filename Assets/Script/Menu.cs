@@ -110,7 +110,7 @@ namespace Jain
             {
                 if (rankTexts[i] != null)
                 {
-                    rankTexts[i].text = (i + 1) + ". -";
+                    rankTexts[i].text = integrated && i >= 5 ? "" : (i + 1) + ". -";
                 }
             }
 
@@ -118,7 +118,7 @@ namespace Jain
             if (rankList == null || rankList.Count == 0) return;
 
             // 3. 실제 데이터가 있는 만큼 (최대 10개) 텍스트에 대입
-            int count = Mathf.Min(rankList.Count, rankTexts.Length);
+            int count = Mathf.Min(rankList.Count, integrated ? Mathf.Min(5, rankTexts.Length) : rankTexts.Length);
 
             for (int i = 0; i < count; i++)
             {

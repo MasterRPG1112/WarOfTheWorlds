@@ -1984,7 +1984,7 @@ GameObject:
   - component: {fileID: 433887564}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Point1
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2084,8 +2084,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87f855cbc951ad446a392af068c644d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Sanghyuk::Jain.PlayerHp
-  playerHp: 20
-  integrated: 0
+  playerHp: 8
+  integrated: 1
 --- !u!4 &433887563
 Transform:
   m_ObjectHideFlags: 0
@@ -4077,7 +4077,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   noBossCampaign: 0
-  allowMissingBossTestSkip: 1
+  allowMissingBossTestSkip: 0
   perimeterSpawns: 1
   showDemoHUD: 0
 --- !u!4 &1060268911

@@ -43,7 +43,7 @@ namespace Integration
         static void LoadGame()
         {
             Time.timeScale = 1;
-            if (GameDataManager.instance != null) Destroy(GameDataManager.instance.gameObject);
+            IntegratedGame.ReleaseSessionData();
             SceneManager.LoadScene("TaeyangIntegrated");
         }
         public void SetVolume(float value)

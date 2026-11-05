@@ -13,6 +13,14 @@ public class ItemSpawner : MonoBehaviour
 
     void Start()
     {
+        // The integrated campaign owns death-position drops and stage-specific meteors.
+        // This also covers Start ordering when CampaignDrops disabled us before Start.
+        if (Integration.IntegratedGame.Active != null)
+        {
+            CancelInvoke();
+            enabled = false;
+            return;
+        }
         InvokeRepeating(nameof(SpawnItem), 1f, spawnInterval);
     }
 

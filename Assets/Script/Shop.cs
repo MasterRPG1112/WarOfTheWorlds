@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
 
 namespace Jain
@@ -26,164 +25,127 @@ namespace Jain
         //UI
         public Text coinUI;
         public GameObject shopMenu;
+        [Header("Purchase prices")]
+        [Min(0)] public int partCost = 1000;
+        [Min(0)] public int stopCost = 800;
+        [Min(0)] public int reflexCost = 450;
+        [Min(0)] public int pullCost = 600;
+        [Min(0)] public int slowCost = 550;
 
         void Start() { Initialize(); }
         public void Initialize()
         {
-            GameDataManager.instance.LoadData();
-            if (GameDataManager.instance.dataReset == 1) coin = 0;
-            else coin = GameDataManager.instance.money;
-            part1 = GameDataManager.instance.part1;
-            part2 = GameDataManager.instance.part2;
-            part3 = GameDataManager.instance.part3;
-            stop = GameDataManager.instance.stop;
-            reflex = GameDataManager.instance.reflex;
-            pull = GameDataManager.instance.pull;
-            slow = GameDataManager.instance.slow;
+            var manager = GameDataManager.instance;
+            if (manager != null)
+            {
+                manager.LoadData();
+                coin = manager.dataReset == 1 ? 0 : Mathf.Max(0, manager.money);
+                part1 = Mathf.Clamp(manager.part1, 0, 1);
+                part2 = Mathf.Clamp(manager.part2, 0, 1);
+                part3 = Mathf.Clamp(manager.part3, 0, 1);
+                stop = Mathf.Max(0, manager.stop);
+                reflex = Mathf.Max(0, manager.reflex);
+                pull = Mathf.Max(0, manager.pull);
+                slow = Mathf.Max(0, manager.slow);
+            }
             ReloadUI();
             partLicense = 1;
-        }
-
-        void Update()
-        {
-            Cheat();
-        }
-
-        void Cheat()
-        {
-            if (Input.GetKeyDown(KeyCode.M))
-            {
-                coin += 100;
-                ReloadUI();
-                GameDataManager.instance.money = coin;
-                GameDataManager.instance.SaveData();
-            }
         }
         
         public void BackBtn()
         {
-            shopMenu.SetActive(false);
+            if (shopMenu != null) shopMenu.SetActive(false);
         }
 
         public void StopBtn()
         {
-            //800벨
-            if (coin >= 800)
-            {
-                stop += 1;
-                coin -= 800;
-                GameDataManager.instance.stop = stop;
-                GameDataManager.instance.money = coin;
-                GameDataManager.instance.SaveData();
-                ReloadUI();
-            }
+            TryBuySkill(3);
         }
 
         public void ReflexBtn()
         {
-            //450벨
-            if (coin >= 450)
-            {
-                reflex += 1;
-                coin -= 450;
-                GameDataManager.instance.reflex = reflex;
-                GameDataManager.instance.money = coin;
-                GameDataManager.instance.SaveData();
-                ReloadUI();
-            }
+            TryBuySkill(2);
         }
 
         public void PullBtn()
         {
-            //600벨
-            if (coin >= 600)
-            {
-                pull += 1;
-                coin -= 600;
-                GameDataManager.instance.pull = pull;
-                GameDataManager.instance.money = coin;
-                GameDataManager.instance.SaveData();
-                ReloadUI();
-            }
+            TryBuySkill(0);
         }
 
         public void SlowBtn()
         {
-            //550벨
-            if (coin >= 550)
-            {
-                slow += 1;
-                coin -= 550;
-                GameDataManager.instance.slow = slow;
-                GameDataManager.instance.money = coin;
-                GameDataManager.instance.SaveData();
-                ReloadUI();
-            }
+            TryBuySkill(1);
         }
 
         public void LifeBtn()
         {
-            if (partLicense == 1)
-            {
-                if (part1 == 0)
-                {
-                    if (coin >= 1000)
-                    {
-                        part1 = 1;
-                        partLicense = 0;
-                        coin -= 1000;
-                        GameDataManager.instance.part1 = part1;
-                        GameDataManager.instance.money = coin;
-                        GameDataManager.instance.SaveData();
-                        ReloadUI();
-                    }
-                }
-            }
+            TryBuyPart(0);
         }
 
         public void SpeedBtn()
         {
-            if (partLicense == 1)
-            {
-                if (part2 == 0)
-                {
-                    if (coin >= 1000)
-                    {
-                        part2 = 1;
-                        partLicense = 0;
-                        coin -= 1000;
-                        GameDataManager.instance.part2 = part2;
-                        GameDataManager.instance.money = coin;
-                        GameDataManager.instance.SaveData();
-                        ReloadUI();
-                    }
-                }
-            }
+            TryBuyPart(1);
         }
 
         public void HpBtn()
         {
-            if (partLicense == 1)
+            TryBuyPart(2);
+        }
+
+        bool CanPurchase
+        {
+            get
             {
-                if (part3 == 0)
-                {
-                    if (coin >= 1000)
-                    {
-                        part3 = 1;
-                        partLicense = 0;
-                        coin -= 1000;
-                        GameDataManager.instance.part3 = part3;
-                        GameDataManager.instance.money = coin;
-                        GameDataManager.instance.SaveData();
-                        ReloadUI();
-                    }
-                }
+                var game = Integration.IntegratedGame.Active;
+                return game == null || (game.shop == this && game.BetweenStages && !game.Ended && shopMenu != null && shopMenu.activeInHierarchy);
             }
+        }
+
+        public bool TryBuySkill(int kind)
+        {
+            if (!CanPurchase || kind < 0 || kind > 3) return false;
+            int cost = Mathf.Max(0, kind == 0 ? pullCost : kind == 1 ? slowCost : kind == 2 ? reflexCost : stopCost);
+            if (coin < cost) return false;
+            coin -= cost;
+            if (kind == 0) pull++;
+            else if (kind == 1) slow++;
+            else if (kind == 2) reflex++;
+            else stop++;
+            SyncLegacyData(true);
+            ReloadUI();
+            return true;
+        }
+
+        public bool TryBuyPart(int kind)
+        {
+            if (!CanPurchase || partLicense != 1 || kind < 0 || kind > 2) return false;
+            int owned = kind == 0 ? part1 : kind == 1 ? part2 : part3;
+            int cost = Mathf.Max(0, partCost);
+            if (owned > 0 || coin < cost) return false;
+            coin -= cost;
+            if (kind == 0) part1 = 1;
+            else if (kind == 1) part2 = 1;
+            else part3 = 1;
+            // Preserve the existing one-part purchase allowance per cleared stage.
+            partLicense = 0;
+            SyncLegacyData(true);
+            ReloadUI();
+            return true;
+        }
+
+        public void SyncLegacyData(bool saveToDisk)
+        {
+            var manager = GameDataManager.instance;
+            if (manager == null) return;
+            manager.money = coin;
+            manager.part1 = part1; manager.part2 = part2; manager.part3 = part3;
+            manager.stop = stop; manager.reflex = reflex; manager.pull = pull; manager.slow = slow;
+            if (saveToDisk) manager.SaveData();
         }
 
         void ReloadUI()
         {
-            coinUI.text = "남은 돈 : " + coin + "벨";
+            if (coinUI != null) coinUI.text = "남은 돈 : " + coin + "벨";
         }
     }
 }
